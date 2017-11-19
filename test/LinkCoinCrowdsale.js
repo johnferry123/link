@@ -15,7 +15,7 @@ const LinkCoinCrowdsale = artifacts.require('LinkCoinCrowdsale');
 const LinkCoin = artifacts.require('LinkCoin');
 const TokenTimelock = artifacts.require('TokenTimelock');
 
-contract('Crowdsale', function ([owner, wallet, bountyWallet, devWallet, foundersWallet, investor, someone]) {
+contract('Crowdsale', function ([owner, wallet, bountyWallet, devWallet, foundersWallet, teamWallet, advisersWallet, investor, someone]) {
 
   const RATE = new BigNumber(10);
   const CAP  = ether(20);
@@ -38,6 +38,8 @@ contract('Crowdsale', function ([owner, wallet, bountyWallet, devWallet, founder
     afterEndTime = endTime + duration.seconds(1);
     devReleaseTime = startTime + 3600
     foundersReleaseTime = startTime + 2*3600
+    teamReleaseTime = startTime + 3*3600
+    advisersReleaseTime = startTime + 4*3600
 
     crowdsale = await LinkCoinCrowdsale.new(
       startTime,
@@ -50,13 +52,19 @@ contract('Crowdsale', function ([owner, wallet, bountyWallet, devWallet, founder
       devWallet,
       devReleaseTime,
       foundersWallet,
-      foundersReleaseTime);
+      foundersReleaseTime,
+      teamWallet,
+      teamReleaseTime,
+      advisersWallet,
+      advisersReleaseTime);
 
     token = LinkCoin.at(await crowdsale.token());
 
     //timeLocks
     devTokenTimelock = TokenTimelock.at(await crowdsale.devTokenTimelock())
     foundersTokenTimelock = TokenTimelock.at(await crowdsale.foundersTokenTimelock())
+    teamTokenTimelock = TokenTimelock.at(await crowdsale.teamTokenTimelock())
+    advisersTokenTimelock = TokenTimelock.at(await crowdsale.advisersTokenTimelock())
   });
 
 
@@ -85,14 +93,34 @@ contract('Crowdsale', function ([owner, wallet, bountyWallet, devWallet, founder
     (await token.balanceOf(devWallet)).should.be.bignumber.equal(DEV_SUPPLY)
   });
 
-  it.only('should set founders timelock', async function () {
-    // right before dev timelock
+  it('should set founders timelock', async function () {
+    // right before founders timelock
     await foundersTokenTimelock.release().should.be.rejected
     await increaseTimeTo(foundersReleaseTime);
     await foundersTokenTimelock.release().should.be.fulfilled
 
     const FOUNDERS_SUPPLY = await crowdsale.FOUNDERS_SUPPLY();
     (await token.balanceOf(foundersWallet)).should.be.bignumber.equal(FOUNDERS_SUPPLY)
+  });
+
+  it('should set team timelock', async function () {
+    // right before team timelock
+    await teamTokenTimelock.release().should.be.rejected
+    await increaseTimeTo(teamReleaseTime);
+    await teamTokenTimelock.release().should.be.fulfilled
+
+    const TEAM_SUPPLY = await crowdsale.TEAM_SUPPLY();
+    (await token.balanceOf(teamWallet)).should.be.bignumber.equal(TEAM_SUPPLY)
+  });
+
+  it('should set advisers timelock', async function () {
+    // right before advisers timelock
+    await advisersTokenTimelock.release().should.be.rejected
+    await increaseTimeTo(advisersReleaseTime);
+    await advisersTokenTimelock.release().should.be.fulfilled
+
+    const ADVISERS_SUPPLY = await crowdsale.ADVISERS_SUPPLY();
+    (await token.balanceOf(advisersWallet)).should.be.bignumber.equal(ADVISERS_SUPPLY)
   });
 
   it('should disable token transfers until ICO end except bountyWallet', async function () {

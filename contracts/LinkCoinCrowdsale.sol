@@ -30,9 +30,13 @@ contract LinkCoinCrowdsale {
 
     TokenTimelock public devTokenTimelock;
     TokenTimelock public foundersTokenTimelock;
+    TokenTimelock public teamTokenTimelock;
+    TokenTimelock public advisersTokenTimelock;
 
     uint256 public constant DEV_SUPPLY = 78400000 * (10 ** uint256(18));
     uint256 public constant FOUNDERS_SUPPLY = 59600000 * (10 ** uint256(18));
+    uint256 public constant TEAM_SUPPLY = 39200000 * (10 ** uint256(18));
+    uint256 public constant ADVISERS_SUPPLY = 29400000 * (10 ** uint256(18));
 
 
     function LinkCoinCrowdsale(
@@ -46,17 +50,25 @@ contract LinkCoinCrowdsale {
         address devWallet,
         uint64 devReleaseTime,
         address foundersWallet,
-        uint64 foundersReleaseTime
+        uint64 foundersReleaseTime,
+        address teamWallet,
+        uint64 teamReleaseTime,
+        address advisersWallet,
+        uint64 advisersReleaseTime
         ) {
             require(_startTime >= now);
             require(devReleaseTime >= now);
             require(foundersReleaseTime >= now);
+            require(teamReleaseTime >= now);
+            require(advisersReleaseTime >= now);
             require(_endTime >= _startTime);
             require(_rate > 0);
             require(_wallet != 0x0);
             require(_bountyWallet != 0x0);
             require(devWallet != 0x0);
             require(foundersWallet != 0x0);
+            require(teamWallet != 0x0);
+            require(advisersWallet != 0x0);
 
             bountyWallet = _bountyWallet;
             endTime = _endTime;
@@ -74,6 +86,12 @@ contract LinkCoinCrowdsale {
 
             foundersTokenTimelock = new TokenTimelock(token, foundersWallet, foundersReleaseTime);
             token.mint(foundersTokenTimelock, FOUNDERS_SUPPLY);
+
+            teamTokenTimelock = new TokenTimelock(token, teamWallet, teamReleaseTime);
+            token.mint(teamTokenTimelock, TEAM_SUPPLY);
+
+            advisersTokenTimelock = new TokenTimelock(token, advisersWallet, advisersReleaseTime);
+            token.mint(advisersTokenTimelock, ADVISERS_SUPPLY);
         }
 
 
