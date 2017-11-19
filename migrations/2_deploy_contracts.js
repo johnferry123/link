@@ -11,11 +11,10 @@ module.exports = function(deployer, network, [owner, wallet, bountyWallet, devWa
   const BigNumber = web3.BigNumber
   const startTime = web3.eth.getBlock(web3.eth.blockNumber).timestamp + 1
   const endTime = startTime + 3600          // One hour after startTime
-  const devReleaseTime = startTime + 3600
-  const foundersReleaseTime = startTime + 2*3600
-  const teamReleaseTime = startTime + 3*3600
-  const advisersReleaseTime = startTime + 4*3600
-  const rate = new BigNumber(2)
+  const devReleaseTime = endTime + 3600
+  const foundersReleaseTime = endTime + 2*3600
+  const teamReleaseTime = endTime + 3*3600
+  const advisersReleaseTime = endTime + 4*3600
   const cap = new BigNumber(154622*10**18) // 154,622 ETH
   const bountySupply = new BigNumber(10*10**18)
 
@@ -23,7 +22,6 @@ module.exports = function(deployer, network, [owner, wallet, bountyWallet, devWa
     LinkCoinCrowdsale,
     startTime,
     endTime,
-    rate,
     cap,
     wallet,
     bountyWallet,

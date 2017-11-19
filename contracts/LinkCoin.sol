@@ -8,7 +8,7 @@ import "zeppelin-solidity/contracts/token/LimitedTransferToken.sol";
 /**
 * @title LinkCoin
 */
-contract LinkCoin is LimitedTransferToken, MintableToken {
+contract LinkCoin is MintableToken, LimitedTransferToken {
 
     string public constant name = "LinkCoin";
     string public constant symbol = "LINK";
@@ -24,7 +24,7 @@ contract LinkCoin is LimitedTransferToken, MintableToken {
 
     function transferableTokens(address holder, uint64 time) public constant returns (uint256) {
         // allow transfers only from bountyWallet before the end of ICO
-        return (holder == bountyWallet) || (time > endTimeICO) ? balanceOf(holder) : 0;
+        return ((holder == bountyWallet) || (time > endTimeICO)) ? balanceOf(holder) : 0;
     }
 
 }
