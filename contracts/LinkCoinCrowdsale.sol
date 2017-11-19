@@ -32,7 +32,7 @@ contract LinkCoinCrowdsale {
     uint256 public constant CAP = 154622 ether;
     uint256 public constant TOKEN_PRESALE_CAP = 45000000 * (10 ** uint256(18));
     uint256 public constant TOKEN_PREICO_CAP = 62797500 * (10 ** uint256(18));
-    uint256 public constant TOKEN_CAP = 695797500 * (10 ** uint256(18));
+    uint256 public constant TOKEN_CAP = 695797500 * (10 ** uint256(18)); // 45000000+62797500+588000000 LINK
 
     address public bountyWallet;
 
@@ -41,6 +41,7 @@ contract LinkCoinCrowdsale {
     TokenTimelock public teamTokenTimelock;
     TokenTimelock public advisersTokenTimelock;
 
+    uint256 public constant BOUNTY_SUPPLY = 78400000 * (10 ** uint256(18));
     uint256 public constant DEV_SUPPLY = 78400000 * (10 ** uint256(18));
     uint256 public constant FOUNDERS_SUPPLY = 59600000 * (10 ** uint256(18));
     uint256 public constant TEAM_SUPPLY = 39200000 * (10 ** uint256(18));
@@ -54,7 +55,6 @@ contract LinkCoinCrowdsale {
         uint256 _endTime,
         address _wallet,
         address _bountyWallet,
-        uint256 _bountySupply,
         address devWallet,
         uint64 devReleaseTime,
         address foundersWallet,
@@ -88,7 +88,7 @@ contract LinkCoinCrowdsale {
             bountyWallet = _bountyWallet;
 
             token = new LinkCoin(bountyWallet, endTime);
-            token.mint(bountyWallet, _bountySupply);
+            token.mint(bountyWallet, BOUNTY_SUPPLY);
 
             devTokenTimelock = new TokenTimelock(token, devWallet, devReleaseTime);
             token.mint(devTokenTimelock, DEV_SUPPLY);

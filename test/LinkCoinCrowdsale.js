@@ -17,13 +17,6 @@ const TokenTimelock = artifacts.require('TokenTimelock');
 
 contract('Crowdsale', function ([owner, wallet, bountyWallet, devWallet, foundersWallet, teamWallet, advisersWallet, investor, someone]) {
 
-  const RATE = new BigNumber(4500);
-  const CAP  = ether(154622);
-  const TOKEN_PRESALE_CAP  = ether(45000000);  // since eth and LINK have same decimals we can use ether()
-  const TOKEN_PREICO_CAP  = ether(62797500);
-  const TOKEN_CAP  = ether(695797500); // 45000000+62797500+588000000
-  const BOUNTY_SUPPLY  = 1;
-
   before(async function() {
     //Advance to the next block to correctly read time in the solidity "now" function interpreted by testrpc
     await advanceBlock()
@@ -34,7 +27,10 @@ contract('Crowdsale', function ([owner, wallet, bountyWallet, devWallet, founder
   advisersTokenTimelock, startTime, preICOstartTime,
   ICOstartTime, endTime,
   afterEndTime, devReleaseTime, foundersReleaseTime,
-  teamReleaseTime, advisersReleaseTime
+  teamReleaseTime, advisersReleaseTime,
+  RATE, CAP, TOKEN_PRESALE_CAP, TOKEN_PREICO_CAP,
+  TOKEN_CAP, BOUNTY_SUPPLY, ADVISERS_SUPPLY, TEAM_SUPPLY,
+  FOUNDERS_SUPPLY, DEV_SUPPLY
 
   beforeEach(async function () {
     startTime = latestTime() + duration.weeks(1);
@@ -54,7 +50,6 @@ contract('Crowdsale', function ([owner, wallet, bountyWallet, devWallet, founder
       endTime,
       wallet,
       bountyWallet,
-      BOUNTY_SUPPLY,
       devWallet,
       devReleaseTime,
       foundersWallet,
@@ -71,6 +66,18 @@ contract('Crowdsale', function ([owner, wallet, bountyWallet, devWallet, founder
     foundersTokenTimelock = TokenTimelock.at(await crowdsale.foundersTokenTimelock())
     teamTokenTimelock = TokenTimelock.at(await crowdsale.teamTokenTimelock())
     advisersTokenTimelock = TokenTimelock.at(await crowdsale.advisersTokenTimelock())
+
+    // crowdsale constants
+    TOKEN_PRESALE_CAP = await crowdsale.TOKEN_PRESALE_CAP();
+    TOKEN_PREICO_CAP = await crowdsale.TOKEN_PREICO_CAP();
+    TOKEN_CAP = await crowdsale.TOKEN_CAP();
+    CAP = await crowdsale.CAP();
+    RATE = await crowdsale.RATE();
+    BOUNTY_SUPPLY = await crowdsale.BOUNTY_SUPPLY();
+    ADVISERS_SUPPLY = await crowdsale.ADVISERS_SUPPLY();
+    TEAM_SUPPLY = await crowdsale.TEAM_SUPPLY();
+    FOUNDERS_SUPPLY = await crowdsale.FOUNDERS_SUPPLY();
+    DEV_SUPPLY = await crowdsale.DEV_SUPPLY();
   });
 
 
@@ -96,9 +103,8 @@ contract('Crowdsale', function ([owner, wallet, bountyWallet, devWallet, founder
     // right before dev timelock
     await devTokenTimelock.release().should.be.rejected
     await increaseTimeTo(devReleaseTime);
-    await devTokenTimelock.release().should.be.fulfilled
+    await devTokenTimelock.release().should.be.fulfilled;
 
-    const DEV_SUPPLY = await crowdsale.DEV_SUPPLY();
     (await token.balanceOf(devWallet)).should.be.bignumber.equal(DEV_SUPPLY)
   });
 
@@ -106,9 +112,8 @@ contract('Crowdsale', function ([owner, wallet, bountyWallet, devWallet, founder
     // right before founders timelock
     await foundersTokenTimelock.release().should.be.rejected
     await increaseTimeTo(foundersReleaseTime);
-    await foundersTokenTimelock.release().should.be.fulfilled
+    await foundersTokenTimelock.release().should.be.fulfilled;
 
-    const FOUNDERS_SUPPLY = await crowdsale.FOUNDERS_SUPPLY();
     (await token.balanceOf(foundersWallet)).should.be.bignumber.equal(FOUNDERS_SUPPLY)
   });
 
@@ -116,9 +121,8 @@ contract('Crowdsale', function ([owner, wallet, bountyWallet, devWallet, founder
     // right before team timelock
     await teamTokenTimelock.release().should.be.rejected
     await increaseTimeTo(teamReleaseTime);
-    await teamTokenTimelock.release().should.be.fulfilled
+    await teamTokenTimelock.release().should.be.fulfilled;
 
-    const TEAM_SUPPLY = await crowdsale.TEAM_SUPPLY();
     (await token.balanceOf(teamWallet)).should.be.bignumber.equal(TEAM_SUPPLY)
   });
 
@@ -126,9 +130,8 @@ contract('Crowdsale', function ([owner, wallet, bountyWallet, devWallet, founder
     // right before advisers timelock
     await advisersTokenTimelock.release().should.be.rejected
     await increaseTimeTo(advisersReleaseTime);
-    await advisersTokenTimelock.release().should.be.fulfilled
+    await advisersTokenTimelock.release().should.be.fulfilled;
 
-    const ADVISERS_SUPPLY = await crowdsale.ADVISERS_SUPPLY();
     (await token.balanceOf(advisersWallet)).should.be.bignumber.equal(ADVISERS_SUPPLY)
   });
 

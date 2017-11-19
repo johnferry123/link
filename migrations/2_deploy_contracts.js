@@ -19,7 +19,6 @@ module.exports = function(deployer, network, [owner, wallet, bountyWallet, devWa
   const foundersReleaseTime = endTime + 2*600
   const teamReleaseTime = endTime + 3*600
   const advisersReleaseTime = endTime + 4*600
-  const bountySupply = new BigNumber(10*10**18)
 
   deployer.deploy(
     LinkCoinCrowdsale,
@@ -29,7 +28,6 @@ module.exports = function(deployer, network, [owner, wallet, bountyWallet, devWa
     endTime,
     wallet,
     bountyWallet,
-    bountySupply,
     devWallet,
     devReleaseTime,
     foundersWallet,
