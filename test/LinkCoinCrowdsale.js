@@ -14,7 +14,7 @@ const should = require('chai')
 const LinkCoinCrowdsale = artifacts.require('LinkCoinCrowdsale');
 const LinkCoin = artifacts.require('LinkCoin');
 
-contract('Crowdsale', function ([owner, wallet, bountyWallet, investor]) {
+contract('Crowdsale', function ([owner, wallet, bountyWallet, investor, someone]) {
 
   const RATE = new BigNumber(10);
   const CAP  = ether(20);
@@ -57,6 +57,17 @@ contract('Crowdsale', function ([owner, wallet, bountyWallet, investor]) {
 
   it('should allocate tokens', async function () {
     (await token.balanceOf(bountyWallet)).should.be.bignumber.equal(BOUNTY_SUPPLY);
+  });
+
+  it.only('should disable token transfers until ICO end except bountyWallet', async function () {
+    await token.transfer(someone, 1, { from: bountyWallet }).should.be.fulfilled
+
+    await increaseTimeTo(startTime);
+    await crowdsale.buyTokens(investor, {value: 1, from: investor})
+    await token.transfer(someone, 1, { from: investor }).should.be.rejected
+
+    await increaseTimeTo(afterEndTime);
+    await token.transfer(someone, 1, { from: investor }).should.be.fulfilled
   });
 
   it('should not accept payments before start', async function () {
