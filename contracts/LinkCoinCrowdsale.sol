@@ -28,6 +28,13 @@ contract LinkCoinCrowdsale {
 
     address public bountyWallet;
 
+    TokenTimelock public devTokenTimelock;
+    TokenTimelock public foundersTokenTimelock;
+
+    uint256 public constant DEV_SUPPLY = 78400000 * (10 ** uint256(18));
+    uint256 public constant FOUNDERS_SUPPLY = 59600000 * (10 ** uint256(18));
+
+
     function LinkCoinCrowdsale(
         uint256 _startTime,
         uint256 _endTime,
@@ -35,12 +42,21 @@ contract LinkCoinCrowdsale {
         uint256 _cap,
         address _wallet,
         address _bountyWallet,
-        uint256 _bountySupply) {
+        uint256 _bountySupply,
+        address devWallet,
+        uint64 devReleaseTime,
+        address foundersWallet,
+        uint64 foundersReleaseTime
+        ) {
             require(_startTime >= now);
+            require(devReleaseTime >= now);
+            require(foundersReleaseTime >= now);
             require(_endTime >= _startTime);
             require(_rate > 0);
             require(_wallet != 0x0);
             require(_bountyWallet != 0x0);
+            require(devWallet != 0x0);
+            require(foundersWallet != 0x0);
 
             bountyWallet = _bountyWallet;
             endTime = _endTime;
@@ -52,6 +68,12 @@ contract LinkCoinCrowdsale {
 
             token = new LinkCoin(bountyWallet, endTime);
             token.mint(bountyWallet, _bountySupply);
+
+            devTokenTimelock = new TokenTimelock(token, devWallet, devReleaseTime);
+            token.mint(devTokenTimelock, DEV_SUPPLY);
+
+            foundersTokenTimelock = new TokenTimelock(token, foundersWallet, foundersReleaseTime);
+            token.mint(foundersTokenTimelock, FOUNDERS_SUPPLY);
         }
 
 

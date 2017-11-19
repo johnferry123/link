@@ -8,7 +8,7 @@ import "zeppelin-solidity/contracts/token/LimitedTransferToken.sol";
 /**
 * @title LinkCoin
 */
-contract LinkCoin is MintableToken, LimitedTransferToken {
+contract LinkCoin is LimitedTransferToken, MintableToken {
 
     string public constant name = "LinkCoin";
     string public constant symbol = "LINK";
