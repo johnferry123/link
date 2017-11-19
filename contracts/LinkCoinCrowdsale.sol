@@ -13,6 +13,8 @@ contract LinkCoinCrowdsale {
 
     // start and end timestamps where investments are allowed (both inclusive)
     uint256 public startTime;
+    uint256 public preICOstartTime;
+    uint256 public ICOstartTime;
     uint256 public endTime;
 
     // address where funds are collected
@@ -23,8 +25,14 @@ contract LinkCoinCrowdsale {
 
     // amount of raised money in wei
     uint256 public weiRaised;
+    uint256 public tokenSoldPreSale;
+    uint256 public tokenSoldPreICO;
+    uint256 public tokenSold;
 
     uint256 public constant CAP = 154622 ether;
+    uint256 public constant TOKEN_PRESALE_CAP = 45000000 * (10 ** uint256(18));
+    uint256 public constant TOKEN_PREICO_CAP = 62797500 * (10 ** uint256(18));
+    uint256 public constant TOKEN_CAP = 695797500 * (10 ** uint256(18));
 
     address public bountyWallet;
 
@@ -41,6 +49,8 @@ contract LinkCoinCrowdsale {
 
     function LinkCoinCrowdsale(
         uint256 _startTime,
+        uint256 _preICOstartTime,
+        uint256 _ICOstartTime,
         uint256 _endTime,
         address _wallet,
         address _bountyWallet,
@@ -55,11 +65,13 @@ contract LinkCoinCrowdsale {
         uint64 advisersReleaseTime
         ) {
             require(_startTime >= now);
-            require(devReleaseTime >= now);
-            require(foundersReleaseTime >= now);
-            require(teamReleaseTime >= now);
-            require(advisersReleaseTime >= now);
-            require(_endTime >= _startTime);
+            require(_preICOstartTime >= _startTime);
+            require(_ICOstartTime >= _preICOstartTime);
+            require(_endTime >= _ICOstartTime);
+            require(devReleaseTime >= _endTime);
+            require(foundersReleaseTime >= _endTime);
+            require(teamReleaseTime >= _endTime);
+            require(advisersReleaseTime >= _endTime);
             require(_wallet != 0x0);
             require(_bountyWallet != 0x0);
             require(devWallet != 0x0);
@@ -67,10 +79,13 @@ contract LinkCoinCrowdsale {
             require(teamWallet != 0x0);
             require(advisersWallet != 0x0);
 
-            bountyWallet = _bountyWallet;
-            endTime = _endTime;
             startTime = _startTime;
+            preICOstartTime = _preICOstartTime;
+            ICOstartTime = _ICOstartTime;
+            endTime = _endTime;
+
             wallet = _wallet;
+            bountyWallet = _bountyWallet;
 
             token = new LinkCoin(bountyWallet, endTime);
             token.mint(bountyWallet, _bountySupply);
@@ -124,6 +139,22 @@ contract LinkCoinCrowdsale {
 
             // update state
             weiRaised = weiRaised.add(weiAmount);
+            tokenSold = tokenSold.add(tokens);
+
+            // check for tokenCAP
+            if (now < preICOstartTime) {
+                // presale
+                tokenSoldPreSale = tokenSoldPreSale.add(tokens);
+                require(tokenSoldPreSale <= TOKEN_PRESALE_CAP);
+            } else if (now < ICOstartTime) {
+                // preICO
+                tokenSoldPreICO = tokenSoldPreICO.add(tokens);
+                require(tokenSoldPreICO <= TOKEN_PREICO_CAP);
+            } else {
+                // ICO
+                require(tokenSold <= TOKEN_CAP);
+            }
+
 
             token.mint(beneficiary, tokens);
             TokenPurchase(msg.sender, beneficiary, weiAmount, tokens);

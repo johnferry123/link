@@ -19,6 +19,9 @@ contract('Crowdsale', function ([owner, wallet, bountyWallet, devWallet, founder
 
   const RATE = new BigNumber(4500);
   const CAP  = ether(154622);
+  const TOKEN_PRESALE_CAP  = ether(45000000);  // since eth and LINK have same decimals we can use ether()
+  const TOKEN_PREICO_CAP  = ether(62797500);
+  const TOKEN_CAP  = ether(695797500); // 45000000+62797500+588000000
   const BOUNTY_SUPPLY  = 1;
 
   before(async function() {
@@ -28,21 +31,26 @@ contract('Crowdsale', function ([owner, wallet, bountyWallet, devWallet, founder
 
   let crowdsale, token, devTokenTimelock,
   foundersTokenTimelock, teamTokenTimelock,
-  advisersTokenTimelock, startTime, endTime,
+  advisersTokenTimelock, startTime, preICOstartTime,
+  ICOstartTime, endTime,
   afterEndTime, devReleaseTime, foundersReleaseTime,
   teamReleaseTime, advisersReleaseTime
 
   beforeEach(async function () {
     startTime = latestTime() + duration.weeks(1);
-    endTime =   startTime + duration.weeks(1);
+    preICOstartTime = startTime + 600 // pre sale lasts 10 minutes
+    ICOstartTime = preICOstartTime + 600 // pre ICO lasts 10 minutes
+    endTime = ICOstartTime + 600          // ICO lasts 10 minutes
     afterEndTime = endTime + duration.seconds(1);
-    devReleaseTime = endTime + 3600
-    foundersReleaseTime = endTime + 2*3600
-    teamReleaseTime = endTime + 3*3600
-    advisersReleaseTime = endTime + 4*3600
+    devReleaseTime = endTime + 600
+    foundersReleaseTime = endTime + 2*600
+    teamReleaseTime = endTime + 3*600
+    advisersReleaseTime = endTime + 4*600
 
     crowdsale = await LinkCoinCrowdsale.new(
       startTime,
+      preICOstartTime,
+      ICOstartTime,
       endTime,
       wallet,
       bountyWallet,
@@ -75,6 +83,9 @@ contract('Crowdsale', function ([owner, wallet, bountyWallet, devWallet, founder
     (await crowdsale.RATE()).should.be.bignumber.equal(RATE);
     (await crowdsale.wallet()).should.be.equal(wallet);
     (await crowdsale.CAP()).should.be.bignumber.equal(CAP);
+    (await crowdsale.TOKEN_PRESALE_CAP()).should.be.bignumber.equal(TOKEN_PRESALE_CAP);
+    (await crowdsale.TOKEN_PREICO_CAP()).should.be.bignumber.equal(TOKEN_PREICO_CAP);
+    (await crowdsale.TOKEN_CAP()).should.be.bignumber.equal(TOKEN_CAP);
   });
 
   it('should allocate bounty tokens', async function () {
@@ -153,9 +164,32 @@ contract('Crowdsale', function ([owner, wallet, bountyWallet, devWallet, founder
     await crowdsale.buyTokens(investor, {value: ether(1), from: investor}).should.be.rejected;
   });
 
-  it('should reject payments over cap', async function () {
-    await increaseTimeTo(startTime);
+  it.skip('should reject payments over cap', async function () {
+    await increaseTimeTo(endTime - 1);
     await crowdsale.send(CAP);
+    await crowdsale.send(1).should.be.rejected;
+  });
+
+  it('should reject payments over TOKEN_PRESALE_CAP and TOKEN_PREICO_CAP', async function () {
+    await increaseTimeTo(startTime);
+    await crowdsale.send(TOKEN_PRESALE_CAP.div(RATE)).should.be.fulfilled;
+    await crowdsale.send(1).should.be.rejected;
+
+    await increaseTimeTo(preICOstartTime);
+    await crowdsale.send(TOKEN_PREICO_CAP.div(RATE)).should.be.fulfilled;
+    await crowdsale.send(1).should.be.rejected;
+
+  });
+
+  it('should reject payments over TOKEN_CAP', async function () {
+    await increaseTimeTo(startTime);
+    await crowdsale.send(1)
+
+    await increaseTimeTo(preICOstartTime);
+    await crowdsale.send(1)
+
+    await increaseTimeTo(ICOstartTime);
+    await crowdsale.send(TOKEN_CAP.div(RATE).floor().sub(2)).should.be.fulfilled;
     await crowdsale.send(1).should.be.rejected;
   });
 
