@@ -18,7 +18,7 @@ const TokenTimelock = artifacts.require('TokenTimelock');
 contract('Crowdsale', function ([owner, wallet, bountyWallet, devWallet, foundersWallet, teamWallet, advisersWallet, investor, someone]) {
 
   const RATE = new BigNumber(4500);
-  const CAP  = ether(20);
+  const CAP  = ether(154622);
   const BOUNTY_SUPPLY  = 1;
 
   before(async function() {
@@ -44,7 +44,6 @@ contract('Crowdsale', function ([owner, wallet, bountyWallet, devWallet, founder
     crowdsale = await LinkCoinCrowdsale.new(
       startTime,
       endTime,
-      CAP,
       wallet,
       bountyWallet,
       BOUNTY_SUPPLY,
@@ -75,7 +74,7 @@ contract('Crowdsale', function ([owner, wallet, bountyWallet, devWallet, founder
     (await crowdsale.endTime()).should.be.bignumber.equal(endTime);
     (await crowdsale.RATE()).should.be.bignumber.equal(RATE);
     (await crowdsale.wallet()).should.be.equal(wallet);
-    (await crowdsale.cap()).should.be.bignumber.equal(CAP);
+    (await crowdsale.CAP()).should.be.bignumber.equal(CAP);
   });
 
   it('should allocate bounty tokens', async function () {
@@ -134,8 +133,8 @@ contract('Crowdsale', function ([owner, wallet, bountyWallet, devWallet, founder
   });
 
   it('should not accept payments before start', async function () {
-    await crowdsale.send(ether(1)).should.be.rejectedWith(EVMThrow);
-    await crowdsale.buyTokens(investor, {from: investor, value: ether(1)}).should.be.rejectedWith(EVMThrow);
+    await crowdsale.send(ether(1)).should.be.rejected;
+    await crowdsale.buyTokens(investor, {from: investor, value: ether(1)}).should.be.rejected
   });
 
   it('should accept payments during the sale', async function () {
@@ -150,14 +149,14 @@ contract('Crowdsale', function ([owner, wallet, bountyWallet, devWallet, founder
 
   it('should reject payments after end', async function () {
     await increaseTimeTo(afterEndTime);
-    await crowdsale.send(ether(1)).should.be.rejectedWith(EVMThrow);
-    await crowdsale.buyTokens(investor, {value: ether(1), from: investor}).should.be.rejectedWith(EVMThrow);
+    await crowdsale.send(ether(1)).should.be.rejected
+    await crowdsale.buyTokens(investor, {value: ether(1), from: investor}).should.be.rejected;
   });
 
-  it.skip('should reject payments over cap', async function () {
+  it('should reject payments over cap', async function () {
     await increaseTimeTo(startTime);
     await crowdsale.send(CAP);
-    await crowdsale.send(1).should.be.rejectedWith(EVMThrow);
+    await crowdsale.send(1).should.be.rejected;
   });
 
   // it('should allow finalization and transfer funds to wallet if the goal is reached', async function () {

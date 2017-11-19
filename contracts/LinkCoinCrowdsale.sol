@@ -24,7 +24,7 @@ contract LinkCoinCrowdsale {
     // amount of raised money in wei
     uint256 public weiRaised;
 
-    uint256 public cap;
+    uint256 public constant CAP = 154622 ether;
 
     address public bountyWallet;
 
@@ -42,7 +42,6 @@ contract LinkCoinCrowdsale {
     function LinkCoinCrowdsale(
         uint256 _startTime,
         uint256 _endTime,
-        uint256 _cap,
         address _wallet,
         address _bountyWallet,
         uint256 _bountySupply,
@@ -72,8 +71,6 @@ contract LinkCoinCrowdsale {
             endTime = _endTime;
             startTime = _startTime;
             wallet = _wallet;
-            require(_cap > 0);
-            cap = _cap;
 
             token = new LinkCoin(bountyWallet, endTime);
             token.mint(bountyWallet, _bountySupply);
@@ -143,19 +140,19 @@ contract LinkCoinCrowdsale {
 
 
 
-        // overriding Crowdsale#validPurchase to add extra cap logic
+        // overriding Crowdsale#validPurchase to add extra CAP logic
         // @return true if investors can buy at the moment
         function validPurchase() internal constant returns (bool) {
-            bool withinCap = weiRaised.add(msg.value) <= cap;
+            bool withinCap = weiRaised.add(msg.value) <= CAP;
             bool withinPeriod = now >= startTime && now <= endTime;
             bool nonZeroPurchase = msg.value != 0;
             return withinPeriod && nonZeroPurchase && withinCap;
         }
 
-        // overriding Crowdsale#hasEnded to add cap logic
+        // overriding Crowdsale#hasEnded to add CAP logic
         // @return true if crowdsale event has ended
         function hasEnded() public constant returns (bool) {
-            bool capReached = weiRaised >= cap;
+            bool capReached = weiRaised >= CAP;
             return now > endTime || capReached;
         }
 

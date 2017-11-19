@@ -15,14 +15,12 @@ module.exports = function(deployer, network, [owner, wallet, bountyWallet, devWa
   const foundersReleaseTime = endTime + 2*3600
   const teamReleaseTime = endTime + 3*3600
   const advisersReleaseTime = endTime + 4*3600
-  const cap = new BigNumber(154622*10**18) // 154,622 ETH
   const bountySupply = new BigNumber(10*10**18)
 
   deployer.deploy(
     LinkCoinCrowdsale,
     startTime,
     endTime,
-    cap,
     wallet,
     bountyWallet,
     bountySupply,
