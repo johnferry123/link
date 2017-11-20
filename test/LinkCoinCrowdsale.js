@@ -24,8 +24,8 @@ contract('Crowdsale', function ([owner, wallet, bountyWallet, devWallet, founder
 
   let crowdsale, token, devTokenTimelock,
   foundersTokenTimelock, teamTokenTimelock,
-  advisersTokenTimelock, startTime, preICOstartTime,
-  ICOstartTime, endTime,
+  advisersTokenTimelock, startTime, preSaleFirstDay, preICOstartTime,
+  ICOstartTime, ICOweek1, ICOweek2, ICOweek3, ICOweek4, endTime,
   afterEndTime, devReleaseTime, foundersReleaseTime,
   teamReleaseTime, advisersReleaseTime,
   RATE, CAP, TOKEN_PRESALE_CAP, TOKEN_PREICO_CAP,
@@ -34,8 +34,13 @@ contract('Crowdsale', function ([owner, wallet, bountyWallet, devWallet, founder
 
   beforeEach(async function () {
     startTime = latestTime() + duration.weeks(1);
+    preSaleFirstDay = startTime + 300
     preICOstartTime = startTime + 600 // pre sale lasts 10 minutes
     ICOstartTime = preICOstartTime + 600 // pre ICO lasts 10 minutes
+    ICOweek1 = ICOstartTime + 120 // in 2 minutes
+    ICOweek2 = ICOstartTime + 240 // in 4 minutes
+    ICOweek3 = ICOstartTime + 360 // in 6 minutes
+    ICOweek4 = ICOstartTime + 480 // in 8 minutes
     endTime = ICOstartTime + 600          // ICO lasts 10 minutes
     afterEndTime = endTime + duration.seconds(1);
     devReleaseTime = endTime + 600
@@ -44,10 +49,7 @@ contract('Crowdsale', function ([owner, wallet, bountyWallet, devWallet, founder
     advisersReleaseTime = endTime + 4*600
 
     crowdsale = await LinkCoinCrowdsale.new(
-      startTime,
-      preICOstartTime,
-      ICOstartTime,
-      endTime,
+      [startTime, preSaleFirstDay, preICOstartTime, ICOstartTime, ICOweek1, ICOweek2, ICOweek3, ICOweek4, endTime],
       wallet,
       bountyWallet,
       devWallet,

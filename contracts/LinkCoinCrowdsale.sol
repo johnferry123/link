@@ -55,15 +55,6 @@ contract LinkCoinCrowdsale {
 
     function LinkCoinCrowdsale(
         uint256 [9] timing,
-        uint256 _startTime,
-        uint256 _preSaleFirstDay,
-        uint256 _preICOstartTime,
-        uint256 _ICOstartTime,
-        /*uint256 _ICOweek1,
-        uint256 _ICOweek2,
-        uint256 _ICOweek3,
-        uint256 _ICOweek4,*/
-        uint256 _endTime,
         address _wallet,
         address _bountyWallet,
         address devWallet,
@@ -157,7 +148,7 @@ contract LinkCoinCrowdsale {
 
             // calculate period bonus
             uint256 periodBonus;
-            /*if (now < preSaleFirstDay) {
+            if (now < preSaleFirstDay) {
             periodBonus = 2250; // 50% bonus for RATE 4500
             } else if (now < preICOstartTime) {
             periodBonus = 1800; // 40% bonus for RATE 4500
@@ -173,11 +164,11 @@ contract LinkCoinCrowdsale {
             periodBonus = 450; // 10% bonus for RATE 4500
             } else {
             periodBonus = 225; // 5% bonus for RATE 4500
-            }*/
+            }
 
             // calculate bulk purchase bonus
             uint256 bulkPurchaseBonus;
-            /*if (weiAmount >= 50 ether) {
+            if (weiAmount >= 50 ether) {
             bulkPurchaseBonus = 3600; // 80% bonus for RATE 4500
             } else if (weiAmount >= 30 ether) {
             bulkPurchaseBonus = 3150; // 70% bonus for RATE 4500
@@ -187,7 +178,7 @@ contract LinkCoinCrowdsale {
             bulkPurchaseBonus = 1350; // 30% bonus for RATE 4500
             } else if (weiAmount >= 3 ether) {
             bulkPurchaseBonus = 450; // 10% bonus for RATE 4500
-            }*/
+            }
 
             uint256 actualRate = RATE.add(periodBonus).add(bulkPurchaseBonus);
 
@@ -200,48 +191,48 @@ contract LinkCoinCrowdsale {
 
             // check for tokenCAP
             if (now < preICOstartTime) {
-                // presale
-                tokenSoldPreSale = tokenSoldPreSale.add(tokens);
-                require(tokenSoldPreSale <= TOKEN_PRESALE_CAP);
-                } else if (now < ICOstartTime) {
-                    // preICO
-                    tokenSoldPreICO = tokenSoldPreICO.add(tokens);
-                    require(tokenSoldPreICO <= TOKEN_PREICO_CAP);
-                    } else {
-                        // ICO
-                        require(tokenSold <= TOKEN_CAP);
-                    }
-
-
-                    token.mint(beneficiary, tokens);
-                    TokenPurchase(msg.sender, beneficiary, weiAmount, tokens);
-
-                    forwardFunds();
-                }
-
-                // send ether to the fund collection wallet
-                // override to create custom fund forwarding mechanisms
-                function forwardFunds() internal {
-                    wallet.transfer(msg.value);
-                }
-
-
-
-
-                // overriding Crowdsale#validPurchase to add extra CAP logic
-                // @return true if investors can buy at the moment
-                function validPurchase() internal constant returns (bool) {
-                    bool withinCap = weiRaised.add(msg.value) <= CAP;
-                    bool withinPeriod = now >= startTime && now <= endTime;
-                    bool nonZeroPurchase = msg.value != 0;
-                    return withinPeriod && nonZeroPurchase && withinCap;
-                }
-
-                // overriding Crowdsale#hasEnded to add CAP logic
-                // @return true if crowdsale event has ended
-                function hasEnded() public constant returns (bool) {
-                    bool capReached = weiRaised >= CAP;
-                    return now > endTime || capReached;
-                }
-
+            // presale
+            tokenSoldPreSale = tokenSoldPreSale.add(tokens);
+            require(tokenSoldPreSale <= TOKEN_PRESALE_CAP);
+            } else if (now < ICOstartTime) {
+            // preICO
+            tokenSoldPreICO = tokenSoldPreICO.add(tokens);
+            require(tokenSoldPreICO <= TOKEN_PREICO_CAP);
+            } else {
+            // ICO
+            require(tokenSold <= TOKEN_CAP);
             }
+
+
+            token.mint(beneficiary, tokens);
+            TokenPurchase(msg.sender, beneficiary, weiAmount, tokens);
+
+            forwardFunds();
+        }
+
+        // send ether to the fund collection wallet
+        // override to create custom fund forwarding mechanisms
+        function forwardFunds() internal {
+            wallet.transfer(msg.value);
+        }
+
+
+
+
+        // overriding Crowdsale#validPurchase to add extra CAP logic
+        // @return true if investors can buy at the moment
+        function validPurchase() internal constant returns (bool) {
+            bool withinCap = weiRaised.add(msg.value) <= CAP;
+            bool withinPeriod = now >= startTime && now <= endTime;
+            bool nonZeroPurchase = msg.value != 0;
+            return withinPeriod && nonZeroPurchase && withinCap;
+        }
+
+        // overriding Crowdsale#hasEnded to add CAP logic
+        // @return true if crowdsale event has ended
+        function hasEnded() public constant returns (bool) {
+            bool capReached = weiRaised >= CAP;
+            return now > endTime || capReached;
+        }
+
+    }
