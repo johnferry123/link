@@ -211,32 +211,34 @@ contract('Crowdsale', function ([owner, wallet, bountyWallet, devWallet, founder
     await crowdsale.buyTokens(investor, {value: ether(1), from: investor}).should.be.rejected;
   });
 
+  // skipped since CAP is unreachable with current settings
   it.skip('should reject payments over cap', async function () {
     await increaseTimeTo(endTime - 1);
     await crowdsale.send(CAP);
     await crowdsale.send(1).should.be.rejected;
   });
 
-  it.skip('should reject payments over TOKEN_PRESALE_CAP and TOKEN_PREICO_CAP', async function () {
+  it('should reject payments over TOKEN_PRESALE_CAP and TOKEN_PREICO_CAP', async function () {
     await increaseTimeTo(startTime);
-    await crowdsale.send(TOKEN_PRESALE_CAP.div(RATE)).should.be.fulfilled;
+    const actual_presale_rate = RATE.mul(230).div(100)
+    const max_presale_wei = TOKEN_PRESALE_CAP.div(actual_presale_rate).floor()
+    await crowdsale.send(max_presale_wei).should.be.fulfilled;
     await crowdsale.send(1).should.be.rejected;
 
     await increaseTimeTo(preICOstartTime);
-    await crowdsale.send(TOKEN_PREICO_CAP.div(RATE)).should.be.fulfilled;
+    const actual_preico_rate = RATE.mul(210).div(100)
+    const max_preico_wei = TOKEN_PREICO_CAP.div(actual_preico_rate).floor()
+    await crowdsale.send(max_preico_wei).should.be.fulfilled;
     await crowdsale.send(1).should.be.rejected;
 
   });
 
-  it.skip('should reject payments over TOKEN_CAP', async function () {
-    await increaseTimeTo(startTime);
-    await crowdsale.send(1)
+  it('should reject payments over TOKEN_CAP', async function () {
+    const actual_ico_rate = RATE.mul(185).div(100)
+    const max_ico_wei = TOKEN_CAP.div(actual_ico_rate).floor()
 
-    await increaseTimeTo(preICOstartTime);
-    await crowdsale.send(1)
-
-    await increaseTimeTo(ICOstartTime);
-    await crowdsale.send(TOKEN_CAP.div(RATE).floor().sub(2)).should.be.fulfilled;
+    await increaseTimeTo(endTime - 1);
+    await crowdsale.send(max_ico_wei).should.be.fulfilled;
     await crowdsale.send(1).should.be.rejected;
   });
 
