@@ -153,7 +153,13 @@ contract('Crowdsale', function ([owner, wallet, bountyWallet, devWallet, founder
     await crowdsale.buyTokens(investor, {from: investor, value: ether(1)}).should.be.rejected
   });
 
-  it('should accept payments during the sale', async function () {
+  it('should accept payments during ICO', async function () {
+    await increaseTimeTo(startTime);
+    await crowdsale.send(ether(1)).should.be.fulfilled;
+    await crowdsale.buyTokens(investor, {from: investor, value: ether(1)}).should.be.fulfilled
+  });
+
+  it('should apply bonus', async function () {
     var balanceBefore, balanceAfter, bonus, weiAmount;
 
     async function checkBonus(purchaseTime, purchaseAmount, expectedBonus) {
@@ -234,30 +240,13 @@ contract('Crowdsale', function ([owner, wallet, bountyWallet, devWallet, founder
     await crowdsale.send(1).should.be.rejected;
   });
 
-  // it('should allow finalization and transfer funds to wallet if the goal is reached', async function () {
-  //   await increaseTimeTo(startTime);
-  //   await crowdsale.send(GOAL);
-  //
-  //   const beforeFinalization = web3.eth.getBalance(wallet);
-  //   await increaseTimeTo(afterEndTime);
-  //   await crowdsale.finalize({from: owner});
-  //   const afterFinalization = web3.eth.getBalance(wallet);
-  //
-  //   afterFinalization.minus(beforeFinalization).should.be.bignumber.equal(GOAL);
-  // });
-  //
-  // it('should allow refunds if the goal is not reached', async function () {
-  //   const balanceBeforeInvestment = web3.eth.getBalance(investor);
-  //
-  //   await increaseTimeTo(startTime);
-  //   await crowdsale.sendTransaction({value: ether(1), from: investor, gasPrice: 0});
-  //   await increaseTimeTo(afterEndTime);
-  //
-  //   await crowdsale.finalize({from: owner});
-  //   await crowdsale.claimRefund({from: investor, gasPrice: 0}).should.be.fulfilled;
-  //
-  //   const balanceAfterRefund = web3.eth.getBalance(investor);
-  //   balanceBeforeInvestment.should.be.bignumber.equal(balanceAfterRefund);
-  // });
+  it('should allow Off Chain Contribution', async function () {
+    await increaseTimeTo(startTime);
+    await crowdsale.addOffChainContribution(investor, 1, 2, "18hKLwrY3LU9NtfQ88tm3ne9bFt7uDBkSx").should.be.fulfilled
 
+    const weiRaised = await crowdsale.weiRaised();
+    const balance = await token.balanceOf(investor);
+    weiRaised.should.be.bignumber.equal(1)
+    balance.should.be.bignumber.equal(2)
+  });
 });

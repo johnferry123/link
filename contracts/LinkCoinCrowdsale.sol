@@ -143,7 +143,7 @@ contract LinkCoinCrowdsale is Ownable {
         // low level token purchase function
         function buyTokens(address beneficiary) public payable {
             require(beneficiary != 0x0);
-            require(validPurchase());
+            require(msg.value != 0);
 
             uint256 weiAmount = msg.value;
 
@@ -204,6 +204,7 @@ contract LinkCoinCrowdsale is Ownable {
             require(tokenSold <= TOKEN_CAP);
             }
 
+            require(validPurchase());
 
             token.mint(beneficiary, tokens);
             TokenPurchase(msg.sender, beneficiary, weiAmount, tokens);
@@ -218,20 +219,24 @@ contract LinkCoinCrowdsale is Ownable {
         }
 
         // add off chain contribution. BTC address of contribution added for transparency
-        /*function addOffChainContribution(address beneficiar, uint256 weiAmount, uint256 tokenAmount, bytes[34] btcAddress) onlyOwner public {
+        function addOffChainContribution(address beneficiar, uint256 weiAmount, uint256 tokenAmount, string btcAddress) onlyOwner public {
             require(beneficiar != 0x0);
-            require(validPurchase(weiAmount, tokenAmount));
+            require(weiAmount > 0);
+            require(tokenAmount > 0);
+            weiRaised += weiAmount;
+            tokenSold += tokenAmount;
+            require(validPurchase());
             token.mint(beneficiar, tokenAmount);
-        }*/
+        }
 
 
         // overriding Crowdsale#validPurchase to add extra CAP logic
         // @return true if investors can buy at the moment
         function validPurchase() internal constant returns (bool) {
-            bool withinCap = weiRaised.add(msg.value) <= CAP;
+            bool withinCap = weiRaised <= CAP;
             bool withinPeriod = now >= startTime && now <= endTime;
-            bool nonZeroPurchase = msg.value != 0;
-            return withinPeriod && nonZeroPurchase && withinCap;
+            bool withinTokenCap = tokenSold <= TOKEN_CAP;
+            return withinPeriod && withinCap && withinTokenCap;
         }
 
         // overriding Crowdsale#hasEnded to add CAP logic
