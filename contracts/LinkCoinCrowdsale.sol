@@ -1,12 +1,13 @@
 pragma solidity ^0.4.11;
 
 import "zeppelin-solidity/contracts/token/TokenTimelock.sol";
+import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 import "./LinkCoin.sol";
 
 /**
 * @title LinkCoinCrowdsale
 */
-contract LinkCoinCrowdsale {
+contract LinkCoinCrowdsale is Ownable {
     using SafeMath for uint256;
     // The token being sold
     MintableToken public token;
@@ -216,7 +217,12 @@ contract LinkCoinCrowdsale {
             wallet.transfer(msg.value);
         }
 
-
+        // add off chain contribution. BTC address of contribution added for transparency
+        /*function addOffChainContribution(address beneficiar, uint256 weiAmount, uint256 tokenAmount, bytes[34] btcAddress) onlyOwner public {
+            require(beneficiar != 0x0);
+            require(validPurchase(weiAmount, tokenAmount));
+            token.mint(beneficiar, tokenAmount);
+        }*/
 
 
         // overriding Crowdsale#validPurchase to add extra CAP logic
