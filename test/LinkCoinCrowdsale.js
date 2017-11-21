@@ -153,10 +153,14 @@ contract('Crowdsale', function ([owner, wallet, bountyWallet, devWallet, founder
     await crowdsale.buyTokens(investor, {from: investor, value: ether(1)}).should.be.rejected
   });
 
-  it('should accept payments during ICO', async function () {
+  it.only('should accept payments during ICO', async function () {
     await increaseTimeTo(startTime);
-    await crowdsale.send(ether(1)).should.be.fulfilled;
-    await crowdsale.buyTokens(investor, {from: investor, value: ether(1)}).should.be.fulfilled
+    await crowdsale.sendTransaction({value:1, from: investor}).should.be.fulfilled;
+    var balance = await token.balanceOf(investor);
+    balance.should.be.bignumber.greaterThan(0);
+    await crowdsale.buyTokens(someone, {from: investor, value: ether(1)}).should.be.fulfilled
+    balance = await token.balanceOf(someone);
+    balance.should.be.bignumber.greaterThan(0);
   });
 
   it('should apply bonus', async function () {
