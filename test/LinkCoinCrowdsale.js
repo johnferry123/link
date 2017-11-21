@@ -22,11 +22,11 @@ contract('Crowdsale', function ([owner, wallet, bountyWallet, devWallet, founder
     await advanceBlock()
   })
 
-  let crowdsale, token, devTokenTimelock,
+  let crowdsale, token, bountyTokenTimelock, devTokenTimelock,
   foundersTokenTimelock, teamTokenTimelock,
   advisersTokenTimelock, startTime, preSaleFirstDay, preICOstartTime,
-  ICOstartTime, ICOweek1, ICOweek2, ICOweek3, ICOweek4, endTime,
-  afterEndTime, devReleaseTime, foundersReleaseTime,
+  ICOstartTime, ICOweek1End, ICOweek2End, ICOweek3End, ICOweek4End, endTime,
+  afterEndTime, bountyReleaseTime, devReleaseTime, foundersReleaseTime,
   teamReleaseTime, advisersReleaseTime,
   RATE, CAP, TOKEN_PRESALE_CAP, TOKEN_PREICO_CAP,
   TOKEN_CAP, BOUNTY_SUPPLY, ADVISERS_SUPPLY, TEAM_SUPPLY,
@@ -37,21 +37,23 @@ contract('Crowdsale', function ([owner, wallet, bountyWallet, devWallet, founder
     preSaleFirstDay = startTime + 300
     preICOstartTime = startTime + 600 // pre sale lasts 10 minutes
     ICOstartTime = preICOstartTime + 600 // pre ICO lasts 10 minutes
-    ICOweek1 = ICOstartTime + 120 // in 2 minutes
-    ICOweek2 = ICOstartTime + 240 // in 4 minutes
-    ICOweek3 = ICOstartTime + 360 // in 6 minutes
-    ICOweek4 = ICOstartTime + 480 // in 8 minutes
+    ICOweek1End = ICOstartTime + 120 // in 2 minutes
+    ICOweek2End = ICOstartTime + 240 // in 4 minutes
+    ICOweek3End = ICOstartTime + 360 // in 6 minutes
+    ICOweek4End = ICOstartTime + 480 // in 8 minutes
     endTime = ICOstartTime + 600          // ICO lasts 10 minutes
     afterEndTime = endTime + duration.seconds(1);
+    bountyReleaseTime = endTime + 600
     devReleaseTime = endTime + 600
     foundersReleaseTime = endTime + 2*600
     teamReleaseTime = endTime + 3*600
     advisersReleaseTime = endTime + 4*600
 
     crowdsale = await LinkCoinCrowdsale.new(
-      [startTime, preSaleFirstDay, preICOstartTime, ICOstartTime, ICOweek1, ICOweek2, ICOweek3, ICOweek4, endTime],
+      [startTime, preSaleFirstDay, preICOstartTime, ICOstartTime, ICOweek1End, ICOweek2End, ICOweek3End, ICOweek4End, endTime],
       wallet,
       bountyWallet,
+      bountyReleaseTime,
       devWallet,
       devReleaseTime,
       foundersWallet,
@@ -64,6 +66,7 @@ contract('Crowdsale', function ([owner, wallet, bountyWallet, devWallet, founder
     token = LinkCoin.at(await crowdsale.token());
 
     //timeLocks
+    bountyTokenTimelock = TokenTimelock.at(await crowdsale.bountyTokenTimelock());
     devTokenTimelock = TokenTimelock.at(await crowdsale.devTokenTimelock());
     foundersTokenTimelock = TokenTimelock.at(await crowdsale.foundersTokenTimelock());
     teamTokenTimelock = TokenTimelock.at(await crowdsale.teamTokenTimelock());
@@ -97,8 +100,13 @@ contract('Crowdsale', function ([owner, wallet, bountyWallet, devWallet, founder
     (await crowdsale.TOKEN_CAP()).should.be.bignumber.equal(TOKEN_CAP);
   });
 
-  it('should allocate bounty tokens', async function () {
-    (await token.balanceOf(bountyWallet)).should.be.bignumber.equal(BOUNTY_SUPPLY);
+  it('should set bounty timelock', async function () {
+    // right before bounty timelock
+    await bountyTokenTimelock.release().should.be.rejected
+    await increaseTimeTo(bountyReleaseTime);
+    await bountyTokenTimelock.release().should.be.fulfilled;
+
+    (await token.balanceOf(bountyWallet)).should.be.bignumber.equal(BOUNTY_SUPPLY)
   });
 
   it('should set dev timelock', async function () {
@@ -137,15 +145,13 @@ contract('Crowdsale', function ([owner, wallet, bountyWallet, devWallet, founder
     (await token.balanceOf(advisersWallet)).should.be.bignumber.equal(ADVISERS_SUPPLY)
   });
 
-  it('should disable token transfers until ICO end except bountyWallet', async function () {
-    await token.transfer(someone, 1, { from: bountyWallet }).should.be.fulfilled
-
+  it('should disable token transfers until ICO end', async function () {
     await increaseTimeTo(startTime);
     await crowdsale.buyTokens(investor, {value: 1, from: investor})
     await token.transfer(someone, 1, { from: investor }).should.be.rejected
 
     await increaseTimeTo(afterEndTime);
-    // await token.transfer(someone, 1, { from: investor }).should.be.fulfilled
+    await token.transfer(someone, 1, { from: investor }).should.be.fulfilled
   });
 
   it('should not accept payments before start', async function () {
@@ -153,7 +159,7 @@ contract('Crowdsale', function ([owner, wallet, bountyWallet, devWallet, founder
     await crowdsale.buyTokens(investor, {from: investor, value: ether(1)}).should.be.rejected
   });
 
-  it.only('should accept payments during ICO', async function () {
+  it('should accept payments during ICO', async function () {
     await increaseTimeTo(startTime);
     await crowdsale.sendTransaction({value:1, from: investor}).should.be.fulfilled;
     var balance = await token.balanceOf(investor);
@@ -193,20 +199,20 @@ contract('Crowdsale', function ([owner, wallet, bountyWallet, devWallet, founder
     // preICO
     await batchBonusCheck(preICOstartTime, 30, 40, 60, 80, 100, 110);
 
-    // ICOweek1
+    // ICOweek1End
     await batchBonusCheck(ICOstartTime, 25, 35, 55, 75, 95, 105);
 
-    // ICOweek2
-    await batchBonusCheck(ICOweek1, 20, 30, 50, 70, 90, 100);
+    // ICOweek2End
+    await batchBonusCheck(ICOweek1End, 20, 30, 50, 70, 90, 100);
 
-    // ICOweek3
-    await batchBonusCheck(ICOweek2, 15, 25, 45, 65, 85, 95);
+    // ICOweek3End
+    await batchBonusCheck(ICOweek2End, 15, 25, 45, 65, 85, 95);
 
-    // ICOweek4
-    await batchBonusCheck(ICOweek3, 10, 20, 40, 60, 80, 90);
+    // ICOweek4End
+    await batchBonusCheck(ICOweek3End, 10, 20, 40, 60, 80, 90);
 
     // last 2 days
-    await batchBonusCheck(ICOweek4, 5, 15, 35, 55, 75, 85);
+    await batchBonusCheck(ICOweek4End, 5, 15, 35, 55, 75, 85);
   });
 
   it('should reject payments after end', async function () {

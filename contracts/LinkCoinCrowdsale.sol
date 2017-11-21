@@ -17,10 +17,10 @@ contract LinkCoinCrowdsale is Ownable {
     uint256 public preSaleFirstDay;
     uint256 public preICOstartTime;
     uint256 public ICOstartTime;
-    uint256 public ICOweek1;
-    uint256 public ICOweek2;
-    uint256 public ICOweek3;
-    uint256 public ICOweek4;
+    uint256 public ICOweek1End;
+    uint256 public ICOweek2End;
+    uint256 public ICOweek3End;
+    uint256 public ICOweek4End;
     uint256 public endTime;
 
     // address where funds are collected
@@ -40,8 +40,7 @@ contract LinkCoinCrowdsale is Ownable {
     uint256 public constant TOKEN_PREICO_CAP = 62797500 * (10 ** uint256(18));
     uint256 public constant TOKEN_CAP = 695797500 * (10 ** uint256(18)); // 45000000+62797500+588000000 LINK
 
-    address public bountyWallet;
-
+    TokenTimelock public bountyTokenTimelock;
     TokenTimelock public devTokenTimelock;
     TokenTimelock public foundersTokenTimelock;
     TokenTimelock public teamTokenTimelock;
@@ -57,7 +56,8 @@ contract LinkCoinCrowdsale is Ownable {
     function LinkCoinCrowdsale(
         uint256 [9] timing,
         address _wallet,
-        address _bountyWallet,
+        address bountyWallet,
+        uint64 bountyReleaseTime,
         address devWallet,
         uint64 devReleaseTime,
         address foundersWallet,
@@ -71,21 +71,21 @@ contract LinkCoinCrowdsale is Ownable {
             preSaleFirstDay = timing[1];
             preICOstartTime = timing[2];
             ICOstartTime = timing[3];
-            ICOweek1 = timing[4];
-            ICOweek2 = timing[5];
-            ICOweek3 = timing[6];
-            ICOweek4 = timing[7];
+            ICOweek1End = timing[4];
+            ICOweek2End = timing[5];
+            ICOweek3End = timing[6];
+            ICOweek4End = timing[7];
             endTime = timing[8];
 
             require(startTime >= now);
             require(preSaleFirstDay >= startTime);
             require(preICOstartTime >= preSaleFirstDay);
             require(ICOstartTime >= preICOstartTime);
-            require(ICOweek1 >= ICOstartTime);
-            require(ICOweek2 >= ICOweek1);
-            require(ICOweek3 >= ICOweek2);
-            require(ICOweek4 >= ICOweek3);
-            require(endTime >= ICOweek4);
+            require(ICOweek1End >= ICOstartTime);
+            require(ICOweek2End >= ICOweek1End);
+            require(ICOweek3End >= ICOweek2End);
+            require(ICOweek4End >= ICOweek3End);
+            require(endTime >= ICOweek4End);
 
             require(devReleaseTime >= endTime);
             require(foundersReleaseTime >= endTime);
@@ -93,18 +93,18 @@ contract LinkCoinCrowdsale is Ownable {
             require(advisersReleaseTime >= endTime);
 
             require(_wallet != 0x0);
-            require(_bountyWallet != 0x0);
+            require(bountyWallet != 0x0);
             require(devWallet != 0x0);
             require(foundersWallet != 0x0);
             require(teamWallet != 0x0);
             require(advisersWallet != 0x0);
 
             wallet = _wallet;
-            bountyWallet = _bountyWallet;
 
-            token = new LinkCoin(bountyWallet, endTime);
+            token = new LinkCoin(endTime);
 
-            token.mint(bountyWallet, BOUNTY_SUPPLY);
+            bountyTokenTimelock = new TokenTimelock(token, bountyWallet, bountyReleaseTime);
+            token.mint(bountyTokenTimelock, BOUNTY_SUPPLY);
 
             devTokenTimelock = new TokenTimelock(token, devWallet, devReleaseTime);
             token.mint(devTokenTimelock, DEV_SUPPLY);
@@ -155,13 +155,13 @@ contract LinkCoinCrowdsale is Ownable {
             periodBonus = 1800; // 40% bonus for RATE 4500
             } else if (now < ICOstartTime) {
             periodBonus = 1350; // 30% bonus for RATE 4500
-            } else if (now < ICOweek1) {
+            } else if (now < ICOweek1End) {
             periodBonus = 1125; // 25% bonus for RATE 4500
-            } else if (now < ICOweek2) {
+            } else if (now < ICOweek2End) {
             periodBonus = 900; // 20% bonus for RATE 4500
-            } else if (now < ICOweek3) {
+            } else if (now < ICOweek3End) {
             periodBonus = 675; // 15% bonus for RATE 4500
-            } else if (now < ICOweek4) {
+            } else if (now < ICOweek4End) {
             periodBonus = 450; // 10% bonus for RATE 4500
             } else {
             periodBonus = 225; // 5% bonus for RATE 4500

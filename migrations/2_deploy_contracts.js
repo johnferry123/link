@@ -15,11 +15,12 @@ module.exports = function(deployer, network, [owner, wallet, bountyWallet, devWa
   const preSaleFirstDay = startTime + 300
   const preICOstartTime = startTime + 600 // pre sale lasts 10 minutes
   const ICOstartTime = preICOstartTime + 600 // pre ICO lasts 10 minutes
-  const ICOweek1 = ICOstartTime + 120 // in 2 minutes
-  const ICOweek2 = ICOstartTime + 240 // in 4 minutes
-  const ICOweek3 = ICOstartTime + 360 // in 6 minutes
-  const ICOweek4 = ICOstartTime + 480 // in 8 minutes
+  const ICOweek1End = ICOstartTime + 120 // in 2 minutes
+  const ICOweek2End = ICOstartTime + 240 // in 4 minutes
+  const ICOweek3End = ICOstartTime + 360 // in 6 minutes
+  const ICOweek4End = ICOstartTime + 480 // in 8 minutes
   const endTime = ICOstartTime + 600          // ICO lasts 10 minutes
+  const bountyReleaseTime = endTime + 600
   const devReleaseTime = endTime + 600
   const foundersReleaseTime = endTime + 2*600
   const teamReleaseTime = endTime + 3*600
@@ -27,9 +28,10 @@ module.exports = function(deployer, network, [owner, wallet, bountyWallet, devWa
 
   deployer.deploy(
     LinkCoinCrowdsale,
-    [startTime, preSaleFirstDay, preICOstartTime, ICOstartTime, ICOweek1, ICOweek2, ICOweek3, ICOweek4, endTime],
+    [startTime, preSaleFirstDay, preICOstartTime, ICOstartTime, ICOweek1End, ICOweek2End, ICOweek3End, ICOweek4End, endTime],
     wallet,
     bountyWallet,
+    bountyReleaseTime,
     devWallet,
     devReleaseTime,
     foundersWallet,
