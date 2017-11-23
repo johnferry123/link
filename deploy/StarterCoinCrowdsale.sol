@@ -318,15 +318,15 @@ contract TokenTimelock {
   }
 }
 
-contract LinkCoin is MintableToken, LimitedTransferToken {
+contract StarterCoin is MintableToken, LimitedTransferToken {
 
-    string public constant name = "LinkCoin";
-    string public constant symbol = "LINK";
+    string public constant name = "StarterCoin";
+    string public constant symbol = "STC";
     uint8 public constant decimals = 18;
 
     uint256 endTimeICO;
 
-    function LinkCoin(uint256 _endTimeICO) {
+    function StarterCoin(uint256 _endTimeICO) {
         endTimeICO = _endTimeICO;
     }
 
@@ -337,7 +337,7 @@ contract LinkCoin is MintableToken, LimitedTransferToken {
 
 }
 
-contract LinkCoinCrowdsale is Ownable {
+contract StarterCoinCrowdsale is Ownable {
     using SafeMath for uint256;
     // The token being sold
     MintableToken public token;
@@ -383,7 +383,7 @@ contract LinkCoinCrowdsale is Ownable {
     uint256 public constant ADVISERS_SUPPLY = 29400000 * (10 ** uint256(18));
 
 
-    function LinkCoinCrowdsale(
+    function StarterCoinCrowdsale(
         uint256 [9] timing,
         address _wallet,
         address bountyWallet,
@@ -431,7 +431,7 @@ contract LinkCoinCrowdsale is Ownable {
 
             wallet = _wallet;
 
-            token = new LinkCoin(endTime);
+            token = new StarterCoin(endTime);
 
             bountyTokenTimelock = new TokenTimelock(token, bountyWallet, bountyReleaseTime);
             token.mint(bountyTokenTimelock, BOUNTY_SUPPLY);

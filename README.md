@@ -1,9 +1,9 @@
-# LinkCoin token and crowdsale contracts
+# StarterCoin token and crowdsale contracts
 
 ## Flattening and ABI
-```solidity_flattener --solc-paths=zeppelin-solidity=$(pwd)/node_modules/zeppelin-solidity/ contracts/LinkCoinCrowdsale.sol --output deploy/LinkCoinCrowdsale.sol```
+```solidity_flattener --solc-paths=zeppelin-solidity=$(pwd)/node_modules/zeppelin-solidity/ contracts/StarterCoinCrowdsale.sol --output deploy/StarterCoinCrowdsale.sol```
 
-```solc --abi deploy/LinkCoinCrowdsale.sol -o ABI --overwrite```
+```solc --abi deploy/StarterCoinCrowdsale.sol -o ABI --overwrite```
 
 ## Deploy
 

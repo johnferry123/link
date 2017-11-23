@@ -2,12 +2,12 @@ pragma solidity ^0.4.11;
 
 import "zeppelin-solidity/contracts/token/TokenTimelock.sol";
 import "zeppelin-solidity/contracts/ownership/Ownable.sol";
-import "./LinkCoin.sol";
+import "./StarterCoin.sol";
 
 /**
-* @title LinkCoinCrowdsale
+* @title StarterCoinCrowdsale
 */
-contract LinkCoinCrowdsale is Ownable {
+contract StarterCoinCrowdsale is Ownable {
     using SafeMath for uint256;
     // The token being sold
     MintableToken public token;
@@ -53,7 +53,7 @@ contract LinkCoinCrowdsale is Ownable {
     uint256 public constant ADVISERS_SUPPLY = 29400000 * (10 ** uint256(18));
 
 
-    function LinkCoinCrowdsale(
+    function StarterCoinCrowdsale(
         uint256 [9] timing,
         address _wallet,
         address bountyWallet,
@@ -101,7 +101,7 @@ contract LinkCoinCrowdsale is Ownable {
 
             wallet = _wallet;
 
-            token = new LinkCoin(endTime);
+            token = new StarterCoin(endTime);
 
             bountyTokenTimelock = new TokenTimelock(token, bountyWallet, bountyReleaseTime);
             token.mint(bountyTokenTimelock, BOUNTY_SUPPLY);

@@ -6,17 +6,17 @@ import "zeppelin-solidity/contracts/token/LimitedTransferToken.sol";
 
 
 /**
-* @title LinkCoin
+* @title StarterCoin
 */
-contract LinkCoin is MintableToken, LimitedTransferToken {
+contract StarterCoin is MintableToken, LimitedTransferToken {
 
-    string public constant name = "LinkCoin";
-    string public constant symbol = "LINK";
+    string public constant name = "StarterCoin";
+    string public constant symbol = "STC";
     uint8 public constant decimals = 18;
 
     uint256 endTimeICO;
 
-    function LinkCoin(uint256 _endTimeICO) {
+    function StarterCoin(uint256 _endTimeICO) {
         endTimeICO = _endTimeICO;
     }
 

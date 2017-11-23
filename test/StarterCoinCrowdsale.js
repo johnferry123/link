@@ -11,8 +11,8 @@ const should = require('chai')
   .use(require('chai-bignumber')(BigNumber))
   .should();
 
-const LinkCoinCrowdsale = artifacts.require('LinkCoinCrowdsale');
-const LinkCoin = artifacts.require('LinkCoin');
+const StarterCoinCrowdsale = artifacts.require('StarterCoinCrowdsale');
+const StarterCoin = artifacts.require('StarterCoin');
 const TokenTimelock = artifacts.require('TokenTimelock');
 
 contract('Crowdsale', function ([owner, wallet, bountyWallet, devWallet, foundersWallet, teamWallet, advisersWallet, investor, someone]) {
@@ -49,7 +49,7 @@ contract('Crowdsale', function ([owner, wallet, bountyWallet, devWallet, founder
     teamReleaseTime = endTime + 3*600
     advisersReleaseTime = endTime + 4*600
 
-    crowdsale = await LinkCoinCrowdsale.new(
+    crowdsale = await StarterCoinCrowdsale.new(
       [startTime, preSaleFirstDay, preICOstartTime, ICOstartTime, ICOweek1End, ICOweek2End, ICOweek3End, ICOweek4End, endTime],
       wallet,
       bountyWallet,
@@ -63,7 +63,7 @@ contract('Crowdsale', function ([owner, wallet, bountyWallet, devWallet, founder
       advisersWallet,
       advisersReleaseTime);
 
-    token = LinkCoin.at(await crowdsale.token());
+    token = StarterCoin.at(await crowdsale.token());
 
     //timeLocks
     bountyTokenTimelock = TokenTimelock.at(await crowdsale.bountyTokenTimelock());

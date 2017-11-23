@@ -1,4 +1,4 @@
-const LinkCoinCrowdsale = artifacts.require("LinkCoinCrowdsale")
+const StarterCoinCrowdsale = artifacts.require("StarterCoinCrowdsale")
 
 
 module.exports = function(deployer, network, [owner, wallet, bountyWallet, devWallet, foundersWallet, teamWallet, advisersWallet]) {
@@ -27,7 +27,7 @@ module.exports = function(deployer, network, [owner, wallet, bountyWallet, devWa
   const advisersReleaseTime = endTime + 4*600
 
   deployer.deploy(
-    LinkCoinCrowdsale,
+    StarterCoinCrowdsale,
     [startTime, preSaleFirstDay, preICOstartTime, ICOstartTime, ICOweek1End, ICOweek2End, ICOweek3End, ICOweek4End, endTime],
     wallet,
     bountyWallet,
