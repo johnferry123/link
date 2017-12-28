@@ -24,24 +24,22 @@ contract('Crowdsale', function ([owner, wallet, bountyWallet, devWallet, founder
 
   let crowdsale, token, bountyTokenTimelock, devTokenTimelock,
   foundersTokenTimelock, teamTokenTimelock,
-  advisersTokenTimelock, startTime, preSaleFirstDay, preICOstartTime,
-  ICOstartTime, ICOweek1End, ICOweek2End, ICOweek3End, ICOweek4End, endTime,
+  advisersTokenTimelock, startTime, timings, bonuses, endTime,
   afterEndTime, bountyReleaseTime, devReleaseTime, foundersReleaseTime,
   teamReleaseTime, advisersReleaseTime,
-  RATE, CAP, TOKEN_PRESALE_CAP, TOKEN_PREICO_CAP,
-  TOKEN_CAP, BOUNTY_SUPPLY, ADVISERS_SUPPLY, TEAM_SUPPLY,
-  FOUNDERS_SUPPLY, DEV_SUPPLY
+  RATE, CAP, TOKEN_CAP, BOUNTY_SUPPLY, ADVISERS_SUPPLY,
+  TEAM_SUPPLY, FOUNDERS_SUPPLY, DEV_SUPPLY
 
   beforeEach(async function () {
     startTime = latestTime() + duration.weeks(1);
-    preSaleFirstDay = startTime + 300
-    preICOstartTime = startTime + 600 // pre sale lasts 10 minutes
-    ICOstartTime = preICOstartTime + 600 // pre ICO lasts 10 minutes
-    ICOweek1End = ICOstartTime + 120 // in 2 minutes
-    ICOweek2End = ICOstartTime + 240 // in 4 minutes
-    ICOweek3End = ICOstartTime + 360 // in 6 minutes
-    ICOweek4End = ICOstartTime + 480 // in 8 minutes
-    endTime = ICOstartTime + 600          // ICO lasts 10 minutes
+
+    timings = []
+    for(var i = 0; i < 11; i++) {
+      timings[i] = startTime + 300 * i;
+    }
+    endTime = timings[timings.length - 1]
+
+    bonuses = [70, 50, 40, 30, 20, 10, 20, 10, 30, 20]
     afterEndTime = endTime + duration.seconds(1);
     bountyReleaseTime = endTime + 600
     devReleaseTime = endTime + 600
@@ -50,7 +48,8 @@ contract('Crowdsale', function ([owner, wallet, bountyWallet, devWallet, founder
     advisersReleaseTime = endTime + 4*600
 
     crowdsale = await StarterCoinCrowdsale.new(
-      [startTime, preSaleFirstDay, preICOstartTime, ICOstartTime, ICOweek1End, ICOweek2End, ICOweek3End, ICOweek4End, endTime],
+      timings,
+      bonuses,
       wallet,
       bountyWallet,
       bountyReleaseTime,
@@ -73,8 +72,6 @@ contract('Crowdsale', function ([owner, wallet, bountyWallet, devWallet, founder
     advisersTokenTimelock = TokenTimelock.at(await crowdsale.advisersTokenTimelock());
 
     // crowdsale constants
-    TOKEN_PRESALE_CAP = await crowdsale.TOKEN_PRESALE_CAP();
-    TOKEN_PREICO_CAP = await crowdsale.TOKEN_PREICO_CAP();
     TOKEN_CAP = await crowdsale.TOKEN_CAP();
     CAP = await crowdsale.CAP();
     RATE = await crowdsale.RATE();
@@ -95,8 +92,6 @@ contract('Crowdsale', function ([owner, wallet, bountyWallet, devWallet, founder
     (await crowdsale.RATE()).should.be.bignumber.equal(RATE);
     (await crowdsale.wallet()).should.be.equal(wallet);
     (await crowdsale.CAP()).should.be.bignumber.equal(CAP);
-    (await crowdsale.TOKEN_PRESALE_CAP()).should.be.bignumber.equal(TOKEN_PRESALE_CAP);
-    (await crowdsale.TOKEN_PREICO_CAP()).should.be.bignumber.equal(TOKEN_PREICO_CAP);
     (await crowdsale.TOKEN_CAP()).should.be.bignumber.equal(TOKEN_CAP);
   });
 
@@ -169,7 +164,7 @@ contract('Crowdsale', function ([owner, wallet, bountyWallet, devWallet, founder
     balance.should.be.bignumber.greaterThan(0);
   });
 
-  it('should apply bonus', async function () {
+  it.only('should apply bonus', async function () {
     var balanceBefore, balanceAfter, bonus, weiAmount;
 
     async function checkBonus(purchaseTime, purchaseAmount, expectedBonus) {
@@ -182,37 +177,39 @@ contract('Crowdsale', function ([owner, wallet, bountyWallet, devWallet, founder
       bonus().should.be.bignumber.equal(expectedBonus)
     }
 
-    async function batchBonusCheck(purchaseTime, bonus1, bonus3, bonus5, bonus10, bonus30, bonus50) {
+    async function batchBonusCheck(purchaseTime, bonus1) {
       await checkBonus(purchaseTime, ether(1), bonus1);
-      await checkBonus(purchaseTime + 1, ether(3), bonus3);
-      await checkBonus(purchaseTime + 2, ether(5), bonus5);
-      await checkBonus(purchaseTime + 3, ether(10), bonus10);
-      await checkBonus(purchaseTime + 4, ether(30), bonus30);
-      await checkBonus(purchaseTime + 5, ether(50), bonus50);
+      await checkBonus(purchaseTime + 1, ether(3), bonus1+10);
+      await checkBonus(purchaseTime + 2, ether(5), bonus1+30);
+      await checkBonus(purchaseTime + 3, ether(10), bonus1+50);
+      await checkBonus(purchaseTime + 4, ether(30), bonus1+70);
+      await checkBonus(purchaseTime + 5, ether(50), bonus1+80);
     }
-    // preSale first day
-    await batchBonusCheck(startTime, 50, 60, 80, 100, 120, 130);
 
-    // preSale after first day
-    await batchBonusCheck(preSaleFirstDay, 40, 50, 70, 90, 110, 120);
+    for (var i = 0; i < bonuses.length; i++) {
+      await batchBonusCheck(timings[i], bonuses[i])
+    }
 
-    // preICO
-    await batchBonusCheck(preICOstartTime, 30, 40, 60, 80, 100, 110);
-
-    // ICOweek1End
-    await batchBonusCheck(ICOstartTime, 25, 35, 55, 75, 95, 105);
-
-    // ICOweek2End
-    await batchBonusCheck(ICOweek1End, 20, 30, 50, 70, 90, 100);
-
-    // ICOweek3End
-    await batchBonusCheck(ICOweek2End, 15, 25, 45, 65, 85, 95);
-
-    // ICOweek4End
-    await batchBonusCheck(ICOweek3End, 10, 20, 40, 60, 80, 90);
-
-    // last 2 days
-    await batchBonusCheck(ICOweek4End, 5, 15, 35, 55, 75, 85);
+    // // preSale after first day
+    // await batchBonusCheck(preSaleFirstDay, 40, 50, 70, 90, 110, 120);
+    //
+    // // preICO
+    // await batchBonusCheck(preICOstartTime, 30, 40, 60, 80, 100, 110);
+    //
+    // // ICOweek1End
+    // await batchBonusCheck(ICOstartTime, 25, 35, 55, 75, 95, 105);
+    //
+    // // ICOweek2End
+    // await batchBonusCheck(ICOweek1End, 20, 30, 50, 70, 90, 100);
+    //
+    // // ICOweek3End
+    // await batchBonusCheck(ICOweek2End, 15, 25, 45, 65, 85, 95);
+    //
+    // // ICOweek4End
+    // await batchBonusCheck(ICOweek3End, 10, 20, 40, 60, 80, 90);
+    //
+    // // last 2 days
+    // await batchBonusCheck(ICOweek4End, 5, 15, 35, 55, 75, 85);
   });
 
   it('should reject payments after end', async function () {
@@ -226,21 +223,6 @@ contract('Crowdsale', function ([owner, wallet, bountyWallet, devWallet, founder
     await increaseTimeTo(endTime - 1);
     await crowdsale.send(CAP);
     await crowdsale.send(1).should.be.rejected;
-  });
-
-  it('should reject payments over TOKEN_PRESALE_CAP and TOKEN_PREICO_CAP', async function () {
-    await increaseTimeTo(startTime);
-    const actual_presale_rate = RATE.mul(230).div(100)
-    const max_presale_wei = TOKEN_PRESALE_CAP.div(actual_presale_rate).floor()
-    await crowdsale.send(max_presale_wei).should.be.fulfilled;
-    await crowdsale.send(1).should.be.rejected;
-
-    await increaseTimeTo(preICOstartTime);
-    const actual_preico_rate = RATE.mul(210).div(100)
-    const max_preico_wei = TOKEN_PREICO_CAP.div(actual_preico_rate).floor()
-    await crowdsale.send(max_preico_wei).should.be.fulfilled;
-    await crowdsale.send(1).should.be.rejected;
-
   });
 
   it('should reject payments over TOKEN_CAP', async function () {

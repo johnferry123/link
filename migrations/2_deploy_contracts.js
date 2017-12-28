@@ -12,14 +12,12 @@ module.exports = function(deployer, network, [owner, wallet, bountyWallet, devWa
   }
   const BigNumber = web3.BigNumber
   const startTime = web3.eth.getBlock(web3.eth.blockNumber).timestamp + 1 // actually pre sale
-  const preSaleFirstDay = startTime + 300
-  const preICOstartTime = startTime + 600 // pre sale lasts 10 minutes
-  const ICOstartTime = preICOstartTime + 600 // pre ICO lasts 10 minutes
-  const ICOweek1End = ICOstartTime + 120 // in 2 minutes
-  const ICOweek2End = ICOstartTime + 240 // in 4 minutes
-  const ICOweek3End = ICOstartTime + 360 // in 6 minutes
-  const ICOweek4End = ICOstartTime + 480 // in 8 minutes
-  const endTime = ICOstartTime + 600          // ICO lasts 10 minutes
+  const timings = []
+  for(var i = 0; i < 11; i++) {
+    timings[i] = startTime + 300 * i;
+  }
+  const bonuses = [70, 50, 40, 30, 20, 10, 20, 10, 30, 20]
+  const endTime = timings[timings.length - 1]
   const bountyReleaseTime = endTime + 600
   const devReleaseTime = endTime + 600
   const foundersReleaseTime = endTime + 2*600
@@ -28,7 +26,8 @@ module.exports = function(deployer, network, [owner, wallet, bountyWallet, devWa
 
   deployer.deploy(
     StarterCoinCrowdsale,
-    [startTime, preSaleFirstDay, preICOstartTime, ICOstartTime, ICOweek1End, ICOweek2End, ICOweek3End, ICOweek4End, endTime],
+    timings,
+    bonuses,
     wallet,
     bountyWallet,
     bountyReleaseTime,

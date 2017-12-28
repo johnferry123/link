@@ -14,14 +14,10 @@ contract StarterCoinCrowdsale is Ownable {
 
     // start and end timestamps where investments are allowed (both inclusive)
     uint256 public startTime;
-    uint256 public preSaleFirstDay;
-    uint256 public preICOstartTime;
-    uint256 public ICOstartTime;
-    uint256 public ICOweek1End;
-    uint256 public ICOweek2End;
-    uint256 public ICOweek3End;
-    uint256 public ICOweek4End;
     uint256 public endTime;
+
+    uint256[11] public timings;
+    uint8[10] public bonuses;
 
     // address where funds are collected
     address public wallet;
@@ -31,14 +27,11 @@ contract StarterCoinCrowdsale is Ownable {
 
     // amount of raised money in wei
     uint256 public weiRaised;
-    uint256 public tokenSoldPreSale;
-    uint256 public tokenSoldPreICO;
+
     uint256 public tokenSold;
 
     uint256 public constant CAP = 154622 ether;
-    uint256 public constant TOKEN_PRESALE_CAP = 45000000 * (10 ** uint256(18));
-    uint256 public constant TOKEN_PREICO_CAP = 62797500 * (10 ** uint256(18));
-    uint256 public constant TOKEN_CAP = 695797500 * (10 ** uint256(18)); // 45000000+62797500+588000000 LINK
+    uint256 public constant TOKEN_CAP = 695797500 * (10 ** uint256(18)); // 45000000+62797500+588000000 STC
 
     TokenTimelock public bountyTokenTimelock;
     TokenTimelock public devTokenTimelock;
@@ -54,7 +47,8 @@ contract StarterCoinCrowdsale is Ownable {
 
 
     function StarterCoinCrowdsale(
-        uint256 [9] timing,
+        uint256 [11] _timings,
+        uint8 [10] _bonuses,
         address _wallet,
         address bountyWallet,
         uint64 bountyReleaseTime,
@@ -67,25 +61,16 @@ contract StarterCoinCrowdsale is Ownable {
         address advisersWallet,
         uint64 advisersReleaseTime
         ) {
-            startTime = timing[0];
-            preSaleFirstDay = timing[1];
-            preICOstartTime = timing[2];
-            ICOstartTime = timing[3];
-            ICOweek1End = timing[4];
-            ICOweek2End = timing[5];
-            ICOweek3End = timing[6];
-            ICOweek4End = timing[7];
-            endTime = timing[8];
+            require(_timings[0] >= now);
 
-            require(startTime >= now);
-            require(preSaleFirstDay >= startTime);
-            require(preICOstartTime >= preSaleFirstDay);
-            require(ICOstartTime >= preICOstartTime);
-            require(ICOweek1End >= ICOstartTime);
-            require(ICOweek2End >= ICOweek1End);
-            require(ICOweek3End >= ICOweek2End);
-            require(ICOweek4End >= ICOweek3End);
-            require(endTime >= ICOweek4End);
+            for(uint i = 1; i < timings.length; i++) {
+              require(_timings[i] >= _timings[i-1]);
+            }
+
+            timings = _timings;
+            bonuses = _bonuses;
+            startTime = timings[0];
+            endTime = timings[timings.length-1];
 
             require(devReleaseTime >= endTime);
             require(foundersReleaseTime >= endTime);
@@ -149,22 +134,12 @@ contract StarterCoinCrowdsale is Ownable {
 
             // calculate period bonus
             uint256 periodBonus;
-            if (now < preSaleFirstDay) {
-            periodBonus = 2250; // 50% bonus for RATE 4500
-            } else if (now < preICOstartTime) {
-            periodBonus = 1800; // 40% bonus for RATE 4500
-            } else if (now < ICOstartTime) {
-            periodBonus = 1350; // 30% bonus for RATE 4500
-            } else if (now < ICOweek1End) {
-            periodBonus = 1125; // 25% bonus for RATE 4500
-            } else if (now < ICOweek2End) {
-            periodBonus = 900; // 20% bonus for RATE 4500
-            } else if (now < ICOweek3End) {
-            periodBonus = 675; // 15% bonus for RATE 4500
-            } else if (now < ICOweek4End) {
-            periodBonus = 450; // 10% bonus for RATE 4500
-            } else {
-            periodBonus = 225; // 5% bonus for RATE 4500
+
+            for (uint8 i = 1; i < timings.length; i++) {
+              if ( now < timings[i] ) {
+                periodBonus = RATE.mul(uint256(bonuses[i-1])).div(100);
+                break;
+              }
             }
 
             // calculate bulk purchase bonus
@@ -189,20 +164,6 @@ contract StarterCoinCrowdsale is Ownable {
             // update state
             weiRaised = weiRaised.add(weiAmount);
             tokenSold = tokenSold.add(tokens);
-
-            // check for tokenCAP
-            if (now < preICOstartTime) {
-            // presale
-            tokenSoldPreSale = tokenSoldPreSale.add(tokens);
-            require(tokenSoldPreSale <= TOKEN_PRESALE_CAP);
-            } else if (now < ICOstartTime) {
-            // preICO
-            tokenSoldPreICO = tokenSoldPreICO.add(tokens);
-            require(tokenSoldPreICO <= TOKEN_PREICO_CAP);
-            } else {
-            // ICO
-            require(tokenSold <= TOKEN_CAP);
-            }
 
             require(validPurchase());
 
