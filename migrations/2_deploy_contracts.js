@@ -1,7 +1,7 @@
 const StarterCoinCrowdsale = artifacts.require("StarterCoinCrowdsale")
 
 
-module.exports = function(deployer, network, [owner, wallet, bountyWallet, devWallet, foundersWallet, teamWallet, advisersWallet]) {
+module.exports = function(deployer, network, [owner, wallet89, wallet10, wallet1, bountyWallet, devWallet, foundersWallet, teamWallet, advisersWallet]) {
   if (network == "mainnet") {
     const devReleaseTime = new BigNumber(1527811200)   //  Friday, 01-Jun-18 00:00:00 UTC
     const foundersReleaseTime = new BigNumber(1546300800)   //  Tuesday, 01-Jan-19 00:00:00 UTC
@@ -28,7 +28,7 @@ module.exports = function(deployer, network, [owner, wallet, bountyWallet, devWa
     StarterCoinCrowdsale,
     timings,
     bonuses,
-    wallet,
+    [wallet89, wallet10, wallet1],
     bountyWallet,
     bountyReleaseTime,
     devWallet,

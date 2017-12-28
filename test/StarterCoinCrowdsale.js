@@ -15,7 +15,7 @@ const StarterCoinCrowdsale = artifacts.require('StarterCoinCrowdsale');
 const StarterCoin = artifacts.require('StarterCoin');
 const TokenTimelock = artifacts.require('TokenTimelock');
 
-contract('Crowdsale', function ([owner, wallet, bountyWallet, devWallet, foundersWallet, teamWallet, advisersWallet, investor, someone]) {
+contract('Crowdsale', function ([owner, wallet89, wallet10, wallet1, bountyWallet, devWallet, foundersWallet, teamWallet, advisersWallet, investor]) {
 
   before(async function() {
     //Advance to the next block to correctly read time in the solidity "now" function interpreted by testrpc
@@ -50,7 +50,7 @@ contract('Crowdsale', function ([owner, wallet, bountyWallet, devWallet, founder
     crowdsale = await StarterCoinCrowdsale.new(
       timings,
       bonuses,
-      wallet,
+      [ wallet89, wallet10, wallet1 ],
       bountyWallet,
       bountyReleaseTime,
       devWallet,
@@ -90,7 +90,9 @@ contract('Crowdsale', function ([owner, wallet, bountyWallet, devWallet, founder
     (await crowdsale.startTime()).should.be.bignumber.equal(startTime);
     (await crowdsale.endTime()).should.be.bignumber.equal(endTime);
     (await crowdsale.RATE()).should.be.bignumber.equal(RATE);
-    (await crowdsale.wallet()).should.be.equal(wallet);
+    (await crowdsale.wallet89()).should.be.equal(wallet89);
+    (await crowdsale.wallet10()).should.be.equal(wallet10);
+    (await crowdsale.wallet1()).should.be.equal(wallet1);
     (await crowdsale.CAP()).should.be.bignumber.equal(CAP);
     (await crowdsale.TOKEN_CAP()).should.be.bignumber.equal(TOKEN_CAP);
   });
@@ -142,11 +144,11 @@ contract('Crowdsale', function ([owner, wallet, bountyWallet, devWallet, founder
 
   it('should disable token transfers until ICO end', async function () {
     await increaseTimeTo(startTime);
-    await crowdsale.buyTokens(investor, {value: 1, from: investor})
-    await token.transfer(someone, 1, { from: investor }).should.be.rejected
+    await crowdsale.buyTokens(investor, {value: 100, from: investor})
+    await token.transfer(owner, 1, { from: investor }).should.be.rejected
 
     await increaseTimeTo(afterEndTime);
-    await token.transfer(someone, 1, { from: investor }).should.be.fulfilled
+    await token.transfer(owner, 1, { from: investor }).should.be.fulfilled
   });
 
   it('should not accept payments before start', async function () {
@@ -156,15 +158,15 @@ contract('Crowdsale', function ([owner, wallet, bountyWallet, devWallet, founder
 
   it('should accept payments during ICO', async function () {
     await increaseTimeTo(startTime);
-    await crowdsale.sendTransaction({value:1, from: investor}).should.be.fulfilled;
+    await crowdsale.sendTransaction({value:100, from: investor}).should.be.fulfilled;
     var balance = await token.balanceOf(investor);
     balance.should.be.bignumber.greaterThan(0);
-    await crowdsale.buyTokens(someone, {from: investor, value: ether(1)}).should.be.fulfilled
-    balance = await token.balanceOf(someone);
+    await crowdsale.buyTokens(owner, {from: investor, value: ether(1)}).should.be.fulfilled
+    balance = await token.balanceOf(owner);
     balance.should.be.bignumber.greaterThan(0);
   });
 
-  it.only('should apply bonus', async function () {
+  it('should apply bonus', async function () {
     var balanceBefore, balanceAfter, bonus, weiAmount;
 
     async function checkBonus(purchaseTime, purchaseAmount, expectedBonus) {
@@ -189,27 +191,6 @@ contract('Crowdsale', function ([owner, wallet, bountyWallet, devWallet, founder
     for (var i = 0; i < bonuses.length; i++) {
       await batchBonusCheck(timings[i], bonuses[i])
     }
-
-    // // preSale after first day
-    // await batchBonusCheck(preSaleFirstDay, 40, 50, 70, 90, 110, 120);
-    //
-    // // preICO
-    // await batchBonusCheck(preICOstartTime, 30, 40, 60, 80, 100, 110);
-    //
-    // // ICOweek1End
-    // await batchBonusCheck(ICOstartTime, 25, 35, 55, 75, 95, 105);
-    //
-    // // ICOweek2End
-    // await batchBonusCheck(ICOweek1End, 20, 30, 50, 70, 90, 100);
-    //
-    // // ICOweek3End
-    // await batchBonusCheck(ICOweek2End, 15, 25, 45, 65, 85, 95);
-    //
-    // // ICOweek4End
-    // await batchBonusCheck(ICOweek3End, 10, 20, 40, 60, 80, 90);
-    //
-    // // last 2 days
-    // await batchBonusCheck(ICOweek4End, 5, 15, 35, 55, 75, 85);
   });
 
   it('should reject payments after end', async function () {
@@ -226,12 +207,12 @@ contract('Crowdsale', function ([owner, wallet, bountyWallet, devWallet, founder
   });
 
   it('should reject payments over TOKEN_CAP', async function () {
-    const actual_ico_rate = RATE.mul(185).div(100)
+    const actual_ico_rate = RATE.mul(250).div(100)
     const max_ico_wei = TOKEN_CAP.div(actual_ico_rate).floor()
 
-    await increaseTimeTo(endTime - 1);
+    await increaseTimeTo(startTime);
     await crowdsale.send(max_ico_wei).should.be.fulfilled;
-    await crowdsale.send(1).should.be.rejected;
+    await crowdsale.send(100).should.be.rejected;
   });
 
   it('should allow Off Chain Contribution', async function () {
@@ -242,5 +223,19 @@ contract('Crowdsale', function ([owner, wallet, bountyWallet, devWallet, founder
     const balance = await token.balanceOf(investor);
     weiRaised.should.be.bignumber.equal(1)
     balance.should.be.bignumber.equal(2)
+  });
+
+  it('should split funds between 3 wallets in proportion 89/10/1', async function () {
+    await increaseTimeTo(startTime);
+    var balance89Before = await web3.eth.getBalance(wallet89);
+    var balance10Before = await web3.eth.getBalance(wallet10);
+    var balance1Before = await web3.eth.getBalance(wallet1);
+    await crowdsale.send(100);
+    var balance89After = await web3.eth.getBalance(wallet89);
+    var balance10After = await web3.eth.getBalance(wallet10);
+    var balance1After = await web3.eth.getBalance(wallet1);
+    balance89After.minus(balance89Before).should.be.bignumber.equal(89)
+    balance10After.minus(balance10Before).should.be.bignumber.equal(10)
+    balance1After.minus(balance1Before).should.be.bignumber.equal(1)
   });
 });

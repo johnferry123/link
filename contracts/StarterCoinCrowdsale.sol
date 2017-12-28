@@ -20,7 +20,9 @@ contract StarterCoinCrowdsale is Ownable {
     uint8[10] public bonuses;
 
     // address where funds are collected
-    address public wallet;
+    address public wallet89;
+    address public wallet10;
+    address public wallet1;
 
     // how many token units a buyer gets per wei
     uint256 public constant RATE = 4500;
@@ -49,7 +51,7 @@ contract StarterCoinCrowdsale is Ownable {
     function StarterCoinCrowdsale(
         uint256 [11] _timings,
         uint8 [10] _bonuses,
-        address _wallet,
+        address [3] _wallets,
         address bountyWallet,
         uint64 bountyReleaseTime,
         address devWallet,
@@ -77,14 +79,19 @@ contract StarterCoinCrowdsale is Ownable {
             require(teamReleaseTime >= endTime);
             require(advisersReleaseTime >= endTime);
 
-            require(_wallet != 0x0);
+            require(_wallets[0] != 0x0);
+            require(_wallets[1] != 0x0);
+            require(_wallets[2] != 0x0);
+
             require(bountyWallet != 0x0);
             require(devWallet != 0x0);
             require(foundersWallet != 0x0);
             require(teamWallet != 0x0);
             require(advisersWallet != 0x0);
 
-            wallet = _wallet;
+            wallet89 = _wallets[0];
+            wallet10 = _wallets[1];
+            wallet1 = _wallets[2];
 
             token = new StarterCoin(endTime);
 
@@ -128,7 +135,7 @@ contract StarterCoinCrowdsale is Ownable {
         // low level token purchase function
         function buyTokens(address beneficiary) public payable {
             require(beneficiary != 0x0);
-            require(msg.value != 0);
+            require(msg.value >= 100); // required for proper splitting funds between 3 wallets
 
             uint256 weiAmount = msg.value;
 
@@ -176,7 +183,12 @@ contract StarterCoinCrowdsale is Ownable {
         // send ether to the fund collection wallet
         // override to create custom fund forwarding mechanisms
         function forwardFunds() internal {
-            wallet.transfer(msg.value);
+          uint256 wei89 = msg.value.mul(89).div(100);
+          uint256 wei10 = msg.value.div(10);
+          uint256 wei1 = msg.value.sub(wei89).sub(wei10);
+          wallet89.transfer(wei89);
+          wallet10.transfer(wei10);
+          wallet1.transfer(wei1);
         }
 
         // add off chain contribution. BTC address of contribution added for transparency
