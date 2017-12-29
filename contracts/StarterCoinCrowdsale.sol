@@ -35,7 +35,6 @@ contract StarterCoinCrowdsale is Ownable {
     uint256 public constant CAP = 154622 ether;
     uint256 public constant TOKEN_CAP = 695797500 * (10 ** uint256(18)); // 45000000+62797500+588000000 STC
 
-    TokenTimelock public bountyTokenTimelock;
     TokenTimelock public devTokenTimelock;
     TokenTimelock public foundersTokenTimelock;
     TokenTimelock public teamTokenTimelock;
@@ -53,7 +52,6 @@ contract StarterCoinCrowdsale is Ownable {
         uint8 [10] _bonuses,
         address [3] _wallets,
         address bountyWallet,
-        uint64 bountyReleaseTime,
         address devWallet,
         uint64 devReleaseTime,
         address foundersWallet,
@@ -93,10 +91,9 @@ contract StarterCoinCrowdsale is Ownable {
             wallet10 = _wallets[1];
             wallet1 = _wallets[2];
 
-            token = new StarterCoin(endTime);
+            token = new StarterCoin(endTime, bountyWallet);
 
-            bountyTokenTimelock = new TokenTimelock(token, bountyWallet, bountyReleaseTime);
-            token.mint(bountyTokenTimelock, BOUNTY_SUPPLY);
+            token.mint(bountyWallet, BOUNTY_SUPPLY);
 
             devTokenTimelock = new TokenTimelock(token, devWallet, devReleaseTime);
             token.mint(devTokenTimelock, DEV_SUPPLY);

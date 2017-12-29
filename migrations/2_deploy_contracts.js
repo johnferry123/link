@@ -18,7 +18,6 @@ module.exports = function(deployer, network, [owner, wallet89, wallet10, wallet1
   }
   const bonuses = [70, 50, 40, 30, 20, 10, 20, 10, 30, 20]
   const endTime = timings[timings.length - 1]
-  const bountyReleaseTime = endTime + 600
   const devReleaseTime = endTime + 600
   const foundersReleaseTime = endTime + 2*600
   const teamReleaseTime = endTime + 3*600
@@ -30,7 +29,6 @@ module.exports = function(deployer, network, [owner, wallet89, wallet10, wallet1
     bonuses,
     [wallet89, wallet10, wallet1],
     bountyWallet,
-    bountyReleaseTime,
     devWallet,
     devReleaseTime,
     foundersWallet,

@@ -22,10 +22,10 @@ contract('Crowdsale', function ([owner, wallet89, wallet10, wallet1, bountyWalle
     await advanceBlock()
   })
 
-  let crowdsale, token, bountyTokenTimelock, devTokenTimelock,
+  let crowdsale, token, devTokenTimelock,
   foundersTokenTimelock, teamTokenTimelock,
   advisersTokenTimelock, startTime, timings, bonuses, endTime,
-  afterEndTime, bountyReleaseTime, devReleaseTime, foundersReleaseTime,
+  afterEndTime, devReleaseTime, foundersReleaseTime,
   teamReleaseTime, advisersReleaseTime,
   RATE, CAP, TOKEN_CAP, BOUNTY_SUPPLY, ADVISERS_SUPPLY,
   TEAM_SUPPLY, FOUNDERS_SUPPLY, DEV_SUPPLY
@@ -41,7 +41,6 @@ contract('Crowdsale', function ([owner, wallet89, wallet10, wallet1, bountyWalle
 
     bonuses = [70, 50, 40, 30, 20, 10, 20, 10, 30, 20]
     afterEndTime = endTime + duration.seconds(1);
-    bountyReleaseTime = endTime + 600
     devReleaseTime = endTime + 600
     foundersReleaseTime = endTime + 2*600
     teamReleaseTime = endTime + 3*600
@@ -52,7 +51,6 @@ contract('Crowdsale', function ([owner, wallet89, wallet10, wallet1, bountyWalle
       bonuses,
       [ wallet89, wallet10, wallet1 ],
       bountyWallet,
-      bountyReleaseTime,
       devWallet,
       devReleaseTime,
       foundersWallet,
@@ -65,7 +63,6 @@ contract('Crowdsale', function ([owner, wallet89, wallet10, wallet1, bountyWalle
     token = StarterCoin.at(await crowdsale.token());
 
     //timeLocks
-    bountyTokenTimelock = TokenTimelock.at(await crowdsale.bountyTokenTimelock());
     devTokenTimelock = TokenTimelock.at(await crowdsale.devTokenTimelock());
     foundersTokenTimelock = TokenTimelock.at(await crowdsale.foundersTokenTimelock());
     teamTokenTimelock = TokenTimelock.at(await crowdsale.teamTokenTimelock());
@@ -97,12 +94,7 @@ contract('Crowdsale', function ([owner, wallet89, wallet10, wallet1, bountyWalle
     (await crowdsale.TOKEN_CAP()).should.be.bignumber.equal(TOKEN_CAP);
   });
 
-  it('should set bounty timelock', async function () {
-    // right before bounty timelock
-    await bountyTokenTimelock.release().should.be.rejected
-    await increaseTimeTo(bountyReleaseTime);
-    await bountyTokenTimelock.release().should.be.fulfilled;
-
+  it('should send tokens to bounty wallet', async function () {
     (await token.balanceOf(bountyWallet)).should.be.bignumber.equal(BOUNTY_SUPPLY)
   });
 
@@ -142,10 +134,11 @@ contract('Crowdsale', function ([owner, wallet89, wallet10, wallet1, bountyWalle
     (await token.balanceOf(advisersWallet)).should.be.bignumber.equal(ADVISERS_SUPPLY)
   });
 
-  it('should disable token transfers until ICO end', async function () {
+  it('should disable token transfers until ICO end (except bountyWallet)', async function () {
     await increaseTimeTo(startTime);
     await crowdsale.buyTokens(investor, {value: 100, from: investor})
     await token.transfer(owner, 1, { from: investor }).should.be.rejected
+    await token.transfer(owner, 1, { from: bountyWallet }).should.be.fulfilled
 
     await increaseTimeTo(afterEndTime);
     await token.transfer(owner, 1, { from: investor }).should.be.fulfilled

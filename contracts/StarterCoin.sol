@@ -14,15 +14,17 @@ contract StarterCoin is MintableToken, LimitedTransferToken {
     string public constant symbol = "STC";
     uint8 public constant decimals = 18;
 
-    uint256 endTimeICO;
+    uint256 public endTimeICO;
+    address public bountyWallet;
 
-    function StarterCoin(uint256 _endTimeICO) {
+    function StarterCoin(uint256 _endTimeICO, address _bountyWallet) {
         endTimeICO = _endTimeICO;
+        bountyWallet = _bountyWallet;
     }
 
     function transferableTokens(address holder, uint64 time) public constant returns (uint256) {
         // allow transfers after the end of ICO
-        return time > endTimeICO ? balanceOf(holder) : 0;
+        return (time > endTimeICO) || (holder == bountyWallet) ? balanceOf(holder) : 0;
     }
 
 }
